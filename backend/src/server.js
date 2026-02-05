@@ -15,7 +15,8 @@ const orderRoutes = require('./routes/orders');
 const webhookRoutes = require('./routes/webhooks');
 const pipelineRoutes = require('./routes/pipeline');
 const analyticsRoutes = require('./routes/analytics');
-const shopifyRoutes = require('./routes/shopify');
+const shopifyRoutes = require('./routes/shopify')
+const woocommerceRoutes = require('./routes/woocommerce');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
@@ -67,6 +68,7 @@ app.use('/api/orders', apiLimiter, orderRoutes);
 app.use('/api/pipeline', apiLimiter, pipelineRoutes);
 app.use('/api/analytics', apiLimiter, analyticsRoutes);
 app.use('/api/shopify', apiLimiter, shopifyRoutes);
+app.use('/api/woocommerce', apiLimiter, woocommerceRoutes);
 app.use('/api/admin', adminRoutes); // Clawdbot full control — no rate limit
 
 // Store products endpoint for storefront
