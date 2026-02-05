@@ -7,7 +7,7 @@ const features = [
   {
     icon: Brain,
     title: "Neural Product Matching",
-    description: "Our AI analyzes millions of data points to understand your preferences, gaming style, and needs to find products that truly fit you."
+    description: "Our AI analyzes millions of data points to understand your preferences, shopping style, and needs to find products that truly fit you."
   },
   {
     icon: Target,
@@ -17,7 +17,7 @@ const features = [
   {
     icon: TrendingUp,
     title: "Trend Analysis",
-    description: "We track global gaming trends in real-time, ensuring you always have access to the hottest and most relevant products."
+    description: "We track global shopping trends in real-time, ensuring you always have access to the hottest and most relevant products."
   },
   {
     icon: Zap,
@@ -67,7 +67,7 @@ export default function About() {
             </h1>
             
             <p className="text-lg text-muted-foreground/70 font-light max-w-2xl mx-auto leading-relaxed">
-              XERIACO uses cutting-edge artificial intelligence to curate the perfect gaming products 
+              XERIACO uses cutting-edge artificial intelligence to curate the perfect shopping products 
               tailored specifically to your style, preferences, and needs.
             </p>
           </motion.div>
@@ -118,7 +118,7 @@ export default function About() {
 
           <div className="grid md:grid-cols-3 gap-8 md:gap-12">
             {[
-              { step: "01", title: "Learn", desc: "Our AI asks smart questions to understand your gaming preferences and style" },
+              { step: "01", title: "Learn", desc: "Our AI asks smart questions to understand your shopping preferences and style" },
               { step: "02", title: "Analyze", desc: "Neural networks process millions of products to find your perfect matches" },
               { step: "03", title: "Deliver", desc: "Receive personalized recommendations tailored exactly to your needs" }
             ].map((item, index) => (
