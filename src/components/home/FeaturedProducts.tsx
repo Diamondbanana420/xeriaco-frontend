@@ -30,10 +30,10 @@ export function FeaturedProducts() {
         {/* Header - Centered, minimal */}
         <div className="mb-24 text-center">
           <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-4">
-            Featured
+            TRENDING
           </p>
           <h2 className="text-4xl font-extralight tracking-tight md:text-5xl">
-            New Arrivals
+            AI Top Picks
           </h2>
         </div>
 
