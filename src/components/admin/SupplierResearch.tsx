@@ -124,7 +124,7 @@
                    id="productCategory"
                    value={productCategory}
                    onChange={(e) => setProductCategory(e.target.value)}
-                   placeholder="e.g., Electronics, Gaming"
+                   placeholder="e.g., Electronics, Fashion"
                    className="bg-muted/30 border-0"
                  />
                </div>
