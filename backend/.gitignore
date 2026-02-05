@@ -1,0 +1,11 @@
+node_modules/
+.env
+logs/
+*.log
+.DS_Store
+coverage/
+
+# Storefront build output (generated at deploy time)
+storefront/out/
+storefront/.next/
+storefront/node_modules/

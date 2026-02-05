@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --gold: #C9A84C;
+  --gold-light: #E8D48B;
+  --gold-dark: #A68832;
+  --cream: #F5F0E8;
+  --bg: #050505;
+  --surface: #0A0A0A;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background-color: var(--bg);
+  color: #F8F6F1;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(201, 168, 76, 0.3);
+  color: #F8F6F1;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E1E1C;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2E2E2A;
+}
+
+/* Premium Glass Effect */
+.glass {
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border-bottom: 1px solid rgba(201, 168, 76, 0.08);
+}
+
+/* Gold gradient text */
+.gold-text {
+  background: linear-gradient(135deg, #E8D48B 0%, #C9A84C 40%, #A68832 70%, #C9A84C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Subtle gold border glow */
+.gold-glow {
+  box-shadow: 0 0 0 1px rgba(201, 168, 76, 0.1),
+              0 0 40px -12px rgba(201, 168, 76, 0.15);
+}
+
+.gold-glow-hover:hover {
+  box-shadow: 0 0 0 1px rgba(201, 168, 76, 0.2),
+              0 0 60px -12px rgba(201, 168, 76, 0.25);
+}
+
+/* Product card hover */
+.product-card {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.5),
+              0 0 0 1px rgba(201, 168, 76, 0.1);
+}
+.product-card img {
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.product-card:hover img {
+  transform: scale(1.05);
+}
+
+/* Stagger animations */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+
+/* Hero ambient glow */
+.hero-glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 168, 76, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(40px);
+}
+
+/* Noise texture overlay */
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Divider line */
+.gold-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.3), transparent);
+}
+
+/* Button base */
+.btn-primary {
+  background: linear-gradient(135deg, #C9A84C 0%, #A68832 100%);
+  color: #050505;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 0.75rem 2rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #E8D48B 0%, #C9A84C 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 30px -8px rgba(201, 168, 76, 0.4);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #C9A84C;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  padding: 0.75rem 2rem;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.btn-outline:hover {
+  background: rgba(201, 168, 76, 0.08);
+  border-color: rgba(201, 168, 76, 0.6);
+}
+
+/* Fade in keyframe for product cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
