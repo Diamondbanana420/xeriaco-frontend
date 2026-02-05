@@ -46,7 +46,7 @@ serve(async (req) => {
 
     console.log("Fetched products for AI analysis:", productList.length);
 
-    const systemPrompt = `You are a gaming product recommendation AI for XERIACO store. Analyze the available products and user preferences to recommend the best matches.
+    const systemPrompt = `You are a shopping product recommendation AI for XERIACO store. Analyze the available products and user preferences to recommend the best matches.
 
 Available products:
 ${JSON.stringify(productList, null, 2)}
