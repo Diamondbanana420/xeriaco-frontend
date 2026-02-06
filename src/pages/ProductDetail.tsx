@@ -23,17 +23,18 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 const API_URL = import.meta.env.VITE_API_URL || 'https://xeriaco-backend-production.up.railway.app';
 
 export default function ProductDetail() {
-  const { id } = useParams<{ id: string }>();
+  const { slug, id } = useParams<{ slug?: string; id?: string }>();
+  const productSlug = slug || id;
   const { addItem } = useCart();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: product, isLoading, error } = useQuery({
-    queryKey: ["product", id],
+    queryKey: ["product", productSlug],
     queryFn: async () => {
-      if (!id) throw new Error("Product ID required");
+      if (!productSlug) throw new Error("Product slug required");
 
-      const response = await fetch(`${API_URL}/api/store/products/${id}`);
+      const response = await fetch(`${API_URL}/api/store/products/${productSlug}`);
       if (!response.ok) throw new Error("Product not found");
       const data = await response.json();
       const p = data.product;
@@ -49,7 +50,7 @@ export default function ProductDetail() {
         categories: p.category ? { name: p.category, slug: p.category.toLowerCase().replace(/\s+/g, '-') } : null,
       };
     },
-    enabled: !!id,
+    enabled: !!productSlug,
   });
 
   const { data: sellerRatings } = useQuery({

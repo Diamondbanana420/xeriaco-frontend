@@ -47,7 +47,7 @@ export default function CheckoutSuccess() {
 
             <div className="flex flex-col gap-3">
               <Button className="w-full neon-glow" asChild>
-                <Link to="/products">
+                <Link to="/shop">
                   Continue Shopping
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
