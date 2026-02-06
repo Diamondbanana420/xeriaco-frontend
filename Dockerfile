@@ -12,7 +12,10 @@ RUN npm ci --legacy-peer-deps
 # Copy source files
 COPY . .
 
-# Build the app
+# Set environment variables for build
+ENV VITE_API_URL=https://xeriaco-backend-production.up.railway.app
+
+# Build the app with environment variables
 RUN npm run build
 
 # Production stage - use nginx for serving static files

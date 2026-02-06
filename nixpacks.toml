@@ -2,7 +2,7 @@
 cmds = ["npm ci"]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = ["VITE_API_URL=https://xeriaco-backend-production.up.railway.app npm run build"]
 
 [start]
 cmd = "npx serve -s dist -l 3000"
