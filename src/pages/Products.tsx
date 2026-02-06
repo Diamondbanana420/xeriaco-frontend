@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -24,59 +23,46 @@ export default function Products() {
   const categoryFilter = searchParams.get("category") || "";
   const sortBy = searchParams.get("sort") || "newest";
 
+  const API_URL = import.meta.env.VITE_API_URL || 'https://xeriaco-backend-production.up.railway.app';
+
   const { data: products, isLoading } = useQuery({
     queryKey: ["products", categoryFilter, sortBy, searchQuery],
     queryFn: async () => {
-      let query = supabase
-        .from("products")
-        .select(`
-          *,
-          categories(name, slug)
-        `)
-        .eq("is_active", true);
+      const params = new URLSearchParams();
+      if (searchQuery) params.set("search", searchQuery);
+      if (categoryFilter) params.set("category", categoryFilter);
+      if (sortBy) params.set("sort", sortBy);
 
-      if (searchQuery) {
-        query = query.ilike("name", `%${searchQuery}%`);
-      }
-
-      if (categoryFilter) {
-        const { data: category } = await supabase
-          .from("categories")
-          .select("id")
-          .eq("slug", categoryFilter)
-          .single();
-        
-        if (category) {
-          query = query.eq("category_id", category.id);
-        }
-      }
-
-      switch (sortBy) {
-        case "price-low":
-          query = query.order("base_price", { ascending: true });
-          break;
-        case "price-high":
-          query = query.order("base_price", { ascending: false });
-          break;
-        case "name":
-          query = query.order("name", { ascending: true });
-          break;
-        default:
-          query = query.order("created_at", { ascending: false });
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
+      const response = await fetch(`${API_URL}/api/store/products?${params.toString()}`);
+      if (!response.ok) throw new Error("Failed to fetch products");
+      const data = await response.json();
+      return (data.products || []).map((p: any) => ({
+        id: p._id || p.id,
+        name: p.title || p.name,
+        description: p.description,
+        base_price: p.sellingPriceAud || p.base_price || 0,
+        image_url: p.featuredImage || p.image_url,
+        is_active: true,
+        categories: p.category ? { name: p.category, slug: p.category.toLowerCase().replace(/\s+/g, '-') } : null,
+      }));
     },
   });
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("categories").select("*");
-      if (error) throw error;
-      return data;
+      try {
+        const response = await fetch(`${API_URL}/api/store/categories`);
+        if (!response.ok) return [];
+        const data = await response.json();
+        return (data.categories || []).map((c: any) => ({
+          id: c._id || c.id,
+          name: c.name,
+          slug: c.slug || c.name.toLowerCase().replace(/\s+/g, '-'),
+        }));
+      } catch {
+        return [];
+      }
     },
   });
 

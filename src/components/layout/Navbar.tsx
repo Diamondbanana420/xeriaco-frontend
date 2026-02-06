@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { User, Menu, X } from "lucide-react";
+import { User, Menu, X, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { ShopifyCartDrawer } from "@/components/shopify/ShopifyCartDrawer";
+import { useCart } from "@/hooks/useCart";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { items } = useCart();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-transparent">
@@ -46,12 +47,26 @@ export function Navbar() {
                 </Link>
               </Button>
             )}
-            <ShopifyCartDrawer />
+            <Button variant="ghost" size="icon" asChild className="rounded-full h-10 w-10 hover:bg-muted/30 relative">
+              <Link to="/cart">
+                <ShoppingCart className="h-4 w-4" />
+                {items.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-cyan-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">{items.length}</span>
+                )}
+              </Link>
+            </Button>
           </div>
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-4 md:hidden">
-            <ShopifyCartDrawer />
+            <Button variant="ghost" size="icon" asChild className="rounded-full h-10 w-10 hover:bg-muted/30 relative">
+              <Link to="/cart">
+                <ShoppingCart className="h-4 w-4" />
+                {items.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-cyan-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">{items.length}</span>
+                )}
+              </Link>
+            </Button>
             <Button
               variant="ghost"
               size="icon"

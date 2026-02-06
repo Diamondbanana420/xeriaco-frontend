@@ -4,8 +4,9 @@ import { Send, Bot, User, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://xeriaco-backend-production.up.railway.app';
 
 interface Message {
   id: string;
@@ -54,15 +55,18 @@ export function AISupportChat() {
         content: msg.content
       }));
 
-      const { data, error } = await supabase.functions.invoke("ai-support-chat", {
-        body: { messages: conversationHistory }
+      const response = await fetch(`${API_URL}/api/store/ai-support-chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: conversationHistory }),
       });
 
-      if (error) {
-        console.error("Chat error:", error);
-        if (error.message?.includes("429")) {
+      if (!response.ok) {
+        console.error("Chat error:", response.statusText);
+        const status = response.status;
+        if (status === 429) {
           toast.error("AI is busy. Please wait a moment and try again.");
-        } else if (error.message?.includes("402")) {
+        } else if (status === 402) {
           toast.error("AI service unavailable. Please email Xeriaco@outlook.com");
         } else {
           toast.error("Failed to get response. Please try again.");
@@ -70,6 +74,8 @@ export function AISupportChat() {
         setIsTyping(false);
         return;
       }
+
+      const data = await response.json();
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),

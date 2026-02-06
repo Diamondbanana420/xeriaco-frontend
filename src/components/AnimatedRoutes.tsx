@@ -4,14 +4,13 @@ import { PageTransition } from "@/components/effects/PageTransition";
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
 import Products from "@/pages/Products";
+import Shop from "@/pages/Shop";
 import ProductDetail from "@/pages/ProductDetail";
 import Cart from "@/pages/Cart";
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import Account from "@/pages/Account";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
-import ShopifyShop from "@/pages/ShopifyShop";
-import ShopifyProductDetail from "@/pages/ShopifyProductDetail";
 import NotFound from "@/pages/NotFound";
 import SupplierVetting from "@/pages/SupplierVetting";
 
@@ -35,8 +34,8 @@ export function AnimatedRoutes() {
         <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
         <Route path="/products" element={<PageTransition><Products /></PageTransition>} />
         <Route path="/products/:id" element={<PageTransition><ProductDetail /></PageTransition>} />
-        <Route path="/shop" element={<PageTransition><ShopifyShop /></PageTransition>} />
-        <Route path="/shop/:handle" element={<PageTransition><ShopifyProductDetail /></PageTransition>} />
+        <Route path="/shop" element={<PageTransition><Shop /></PageTransition>} />
+        <Route path="/product/:slug" element={<PageTransition><ProductDetail /></PageTransition>} />
         <Route path="/cart" element={<PageTransition><Cart /></PageTransition>} />
         <Route path="/checkout/success" element={<PageTransition><CheckoutSuccess /></PageTransition>} />
         <Route path="/account" element={<PageTransition><Account /></PageTransition>} />

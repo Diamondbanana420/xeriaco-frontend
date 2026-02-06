@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { OrderTrackingTimeline } from "@/components/account/OrderTrackingTimeline";
 import { 
   User, 
@@ -28,6 +27,8 @@ import {
 import { toast } from "sonner";
 import { useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://xeriaco-backend-production.up.railway.app';
+
 export default function Account() {
   const { user, loading, signOut } = useAuth();
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
@@ -44,13 +45,14 @@ export default function Account() {
     queryKey: ["profile", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      if (error) throw error;
-      return data;
+      try {
+        const response = await fetch(`${API_URL}/api/store/profile/${user.id}`);
+        if (!response.ok) return { full_name: user.email?.split('@')[0] || 'User', avatar_url: null };
+        const data = await response.json();
+        return data.profile || { full_name: user.email?.split('@')[0] || 'User', avatar_url: null };
+      } catch {
+        return { full_name: user.email?.split('@')[0] || 'User', avatar_url: null };
+      }
     },
     enabled: !!user?.id,
   });
@@ -60,27 +62,14 @@ export default function Account() {
     queryKey: ["orders", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from("orders")
-        .select(`
-          id,
-          status,
-          total_amount,
-          created_at,
-          tracking_number,
-          carrier,
-          tracking_url,
-          shipped_at,
-          delivered_at,
-          order_items (
-            *,
-            products (name, image_url)
-          )
-        `)
-        .eq("buyer_id", user.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      try {
+        const response = await fetch(`${API_URL}/api/store/orders?userId=${user.id}`);
+        if (!response.ok) return [];
+        const data = await response.json();
+        return data.orders || [];
+      } catch {
+        return [];
+      }
     },
     enabled: !!user?.id,
   });
@@ -102,31 +91,28 @@ export default function Account() {
     queryKey: ["wishlist", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from("wishlist")
-        .select(`
-          *,
-          products (id, name, image_url, base_price, platform)
-        `)
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      try {
+        const response = await fetch(`${API_URL}/api/store/wishlist?userId=${user.id}`);
+        if (!response.ok) return [];
+        const data = await response.json();
+        return data.items || [];
+      } catch {
+        return [];
+      }
     },
     enabled: !!user?.id,
   });
 
   const removeFromWishlist = async (wishlistId: string) => {
-    const { error } = await supabase
-      .from("wishlist")
-      .delete()
-      .eq("id", wishlistId);
-    
-    if (error) {
-      toast.error("Failed to remove from wishlist");
-    } else {
+    try {
+      const response = await fetch(`${API_URL}/api/store/wishlist/${wishlistId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to remove");
       toast.success("Removed from wishlist");
       refetchWishlist();
+    } catch {
+      toast.error("Failed to remove from wishlist");
     }
   };
 

@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { ShoppingCart, Heart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://xeriaco-backend-production.up.railway.app';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -33,17 +34,19 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const addToWishlist = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Please sign in to add to wishlist");
-      
-      const { error } = await supabase.from("wishlist").insert({
-        user_id: user.id,
-        product_id: product.id,
+
+      const response = await fetch(`${API_URL}/api/store/wishlist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, productId: product.id }),
       });
-      
-      if (error) {
-        if (error.code === "23505") {
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        if (data.error?.includes("already") || response.status === 409) {
           throw new Error("Already in wishlist");
         }
-        throw error;
+        throw new Error(data.error || "Failed to add to wishlist");
       }
     },
     onSuccess: () => {

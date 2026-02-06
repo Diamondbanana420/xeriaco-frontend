@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Bot, RefreshCw, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -26,24 +25,30 @@ export function AIRecommendations() {
   const [hasLoaded, setHasLoaded] = useState(false);
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_API_URL || 'https://xeriaco-backend-production.up.railway.app';
+
   const fetchRecommendations = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("ai-recommendations", {
-        body: { userPreferences: null }
+      const response = await fetch(`${API_URL}/api/store/ai-recommendations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userPreferences: null }),
       });
 
-      if (error) {
-        console.error("Error fetching recommendations:", error);
-        if (error.message?.includes("429")) {
+      if (!response.ok) {
+        const status = response.status;
+        if (status === 429) {
           toast.error("Rate limit reached. Please try again in a moment.");
-        } else if (error.message?.includes("402")) {
+        } else if (status === 402) {
           toast.error("AI credits needed. Please add credits to continue.");
         } else {
           toast.error("Failed to get AI recommendations");
         }
         return;
       }
+
+      const data = await response.json();
 
       if (data?.recommendations) {
         setRecommendations(data.recommendations);

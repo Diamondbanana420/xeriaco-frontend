@@ -2,25 +2,26 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/products/ProductCard";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight } from "lucide-react";
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://xeriaco-backend-production.up.railway.app';
 
 export function FeaturedProducts() {
   const { data: products, isLoading } = useQuery({
     queryKey: ["featured-products"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select(`
-          *,
-          categories(name, slug)
-        `)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(3);
-      
-      if (error) throw error;
-      return data;
+      const response = await fetch(`${API_URL}/api/store/products?limit=3`);
+      if (!response.ok) throw new Error("Failed to fetch products");
+      const data = await response.json();
+      return (data.products || []).map((p: any) => ({
+        id: p._id || p.id,
+        name: p.title || p.name,
+        description: p.description,
+        base_price: p.sellingPriceAud || p.base_price || 0,
+        image_url: p.featuredImage || p.image_url,
+        is_active: true,
+        categories: p.category ? { name: p.category, slug: p.category.toLowerCase().replace(/\s+/g, '-') } : null,
+      }));
     },
   });
 

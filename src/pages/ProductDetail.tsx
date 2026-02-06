@@ -1,6 +1,5 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,8 @@ import {
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://xeriaco-backend-production.up.railway.app';
+
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const { addItem } = useCart();
@@ -31,18 +32,22 @@ export default function ProductDetail() {
     queryKey: ["product", id],
     queryFn: async () => {
       if (!id) throw new Error("Product ID required");
-      
-      const { data, error } = await supabase
-        .from("products")
-        .select(`
-          *,
-          categories(name, slug)
-        `)
-        .eq("id", id)
-        .single();
-      
-      if (error) throw error;
-      return data;
+
+      const response = await fetch(`${API_URL}/api/store/products/${id}`);
+      if (!response.ok) throw new Error("Product not found");
+      const data = await response.json();
+      const p = data.product;
+      if (!p) throw new Error("Product not found");
+      return {
+        id: p._id || p.id,
+        name: p.title || p.name,
+        description: p.aiContent?.description || p.description || '',
+        base_price: p.sellingPriceAud || p.base_price || 0,
+        image_url: p.featuredImage || p.image_url,
+        platform: p.platform || null,
+        seller_id: p.seller_id || null,
+        categories: p.category ? { name: p.category, slug: p.category.toLowerCase().replace(/\s+/g, '-') } : null,
+      };
     },
     enabled: !!id,
   });
@@ -50,19 +55,8 @@ export default function ProductDetail() {
   const { data: sellerRatings } = useQuery({
     queryKey: ["seller-ratings", product?.seller_id],
     queryFn: async () => {
-      if (!product?.seller_id) return null;
-      
-      const { data, error } = await supabase
-        .from("seller_ratings")
-        .select("rating")
-        .eq("seller_id", product.seller_id);
-      
-      if (error) throw error;
-      
-      if (data.length === 0) return { average: 0, count: 0 };
-      
-      const average = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
-      return { average, count: data.length };
+      // Seller ratings not available via API yet - return empty
+      return { average: 0, count: 0 };
     },
     enabled: !!product?.seller_id,
   });
@@ -71,17 +65,16 @@ export default function ProductDetail() {
     mutationFn: async () => {
       if (!user) throw new Error("Please sign in to add to wishlist");
       if (!product) throw new Error("Product not found");
-      
-      const { error } = await supabase.from("wishlist").insert({
-        user_id: user.id,
-        product_id: product.id,
+
+      const response = await fetch(`${API_URL}/api/store/wishlist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, productId: product.id }),
       });
-      
-      if (error) {
-        if (error.code === "23505") {
-          throw new Error("Already in wishlist");
-        }
-        throw error;
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to add to wishlist");
       }
     },
     onSuccess: () => {

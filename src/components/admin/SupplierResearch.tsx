@@ -7,8 +7,9 @@
  import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
  import { Badge } from "@/components/ui/badge";
  import { ScrollArea } from "@/components/ui/scroll-area";
- import { supabase } from "@/integrations/supabase/client";
  import { toast } from "sonner";
+
+ const API_URL = import.meta.env.VITE_API_URL || 'https://xeriaco-backend-production.up.railway.app';
  
  interface ResearchResult {
    supplierName: string;
@@ -36,20 +37,24 @@
      setResult(null);
  
      try {
-       const { data, error } = await supabase.functions.invoke("perplexity-supplier-research", {
-         body: {
+       const response = await fetch(`${API_URL}/api/admin/supplier-research`, {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
            supplierName: supplierName.trim(),
            supplierUrl: supplierUrl.trim() || undefined,
            productCategory: productCategory.trim() || undefined,
-         },
+         }),
        });
- 
-       if (error) {
-         console.error("Research error:", error);
+
+       if (!response.ok) {
+         console.error("Research error:", response.statusText);
          toast.error("Failed to research supplier. Please try again.");
          return;
        }
- 
+
+       const data = await response.json();
+
        if (data?.success) {
          setResult(data.data);
          toast.success("Supplier research completed!");

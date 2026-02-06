@@ -7,12 +7,10 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/hooks/useCart";
 import { GalaxyBackground } from "@/components/effects/GalaxyBackground";
 import { AnimatedRoutes } from "@/components/AnimatedRoutes";
-import { useShopifyCartSync } from "@/hooks/useShopifyCartSync";
 
 const queryClient = new QueryClient();
 
 function AppContent() {
-  useShopifyCartSync();
   return <AnimatedRoutes />;
 }
 

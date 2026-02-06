@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useCart, CartItem } from "@/hooks/useCart";
+import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://xeriaco-backend-production.up.railway.app';
 
 export function useCheckout() {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,20 +17,21 @@ export function useCheckout() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: {
-          items: items.map((item: CartItem) => ({
+      const response = await fetch(`${API_URL}/api/checkout/create-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map((item: any) => ({
             productId: item.productId,
-            name: item.name,
-            price: item.price,
-            image: item.image,
             quantity: item.quantity,
           })),
-        },
+        }),
       });
 
-      if (error) {
-        throw new Error(error.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Checkout failed');
       }
 
       if (data?.url) {
