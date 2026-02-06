@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { CategorySection } from "@/components/home/CategorySection";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { AIAssistant } from "@/components/home/AIAssistant";
+import ChatBot from "@/components/home/ChatBot";
 
 const Index = () => {
   return (
@@ -16,6 +17,7 @@ const Index = () => {
         <FeaturedProducts />
       </main>
       <Footer />
+      <ChatBot />
     </div>
   );
 };
