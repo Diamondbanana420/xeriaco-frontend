@@ -119,11 +119,11 @@ export function AIAssistant() {
                                 >
                                 <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground/50 mb-4">
                                             Personalised
-                                </p>p>
+                                </p>
                                 <h2 className="text-4xl md:text-5xl font-extralight tracking-tight">
-                                            Find Your <span className="text-gradient">Perfect Match</span>span>
-                                </h2>h2>
-                      </motion.div>motion.div>
+                                            Find Your <span className="text-gradient">Perfect Match</span>
+                                </h2>
+                      </motion.div>
               
                       <AnimatePresence mode="wait">
                         {/* Idle state */}
@@ -140,10 +140,10 @@ export function AIAssistant() {
                                                       className="group relative inline-flex items-center gap-3 px-10 py-5 rounded-full border border-white/10 bg-white/[0.02] backdrop-blur-sm hover:border-primary/40 hover:bg-white/[0.04] transition-all duration-500"
                                                     >
                                                     <Sparkles className="h-4 w-4 text-primary/70 group-hover:text-primary transition-colors" />
-                                                    <span className="text-sm font-light tracking-wide">3 questions. Curated results.</span>span>
+                                                    <span className="text-sm font-light tracking-wide">3 questions. Curated results.</span>
                                                     <ArrowRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                                    </button>button>
-                      </motion.div>motion.div>
+                                    </button>
+                      </motion.div>
                     )}
                       
                         {/* Quiz steps */}
@@ -165,11 +165,11 @@ export function AIAssistant() {
                                                                               }`}
                                                                             />
                                                       ))}
-                                    </div>div>
+                                    </div>
                       
                                     <h3 className="text-2xl font-extralight text-center mb-8">
                                       {STEPS[step].question}
-                                    </h3>h3>
+                                    </h3>
                       
                                     <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
                                       {STEPS[step].options.map((opt) => (
@@ -183,9 +183,9 @@ export function AIAssistant() {
                                                                               }`}
                                                                             >
                                                           {opt.label}
-                                                        </button>button>
+                                                        </button>
                                                       ))}
-                                    </div>div>
+                                    </div>
                       
                                     <div className="text-center mt-6">
                                                     <button
@@ -193,9 +193,9 @@ export function AIAssistant() {
                                                                         className="text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
                                                                       >
                                                                       Cancel
-                                                    </button>button>
-                                    </div>div>
-                      </motion.div>motion.div>
+                                                    </button>
+                                    </div>
+                      </motion.div>
                     )}
                       
                         {/* Loading */}
@@ -209,11 +209,11 @@ export function AIAssistant() {
                                     >
                                     <div className="w-12 h-12 mx-auto mb-6 rounded-full border border-primary/30 flex items-center justify-center">
                                                     <Sparkles className="h-5 w-5 text-primary animate-pulse" />
-                                    </div>div>
+                                    </div>
                                     <p className="text-sm text-muted-foreground/60 font-light">
                                                     Finding your matches...
-                                    </p>p>
-                      </motion.div>motion.div>
+                                    </p>
+                      </motion.div>
                     )}
                       
                         {/* Results */}
@@ -227,7 +227,7 @@ export function AIAssistant() {
                         {summary && (
                                                       <p className="text-center text-sm text-muted-foreground/60 font-light mb-10">
                                                         {summary}
-                                                      </p>p>
+                                                      </p>
                                     )}
                       
                         {results.length > 0 ? (
@@ -243,22 +243,22 @@ export function AIAssistant() {
                                                                                                   >
                                                                                                   <div className="flex-1 min-w-0">
                                                                                                                           <div className="flex items-center gap-2 mb-1">
-                                                                                                                                                    <span className="text-xs text-primary/60 font-light">{rec.score}% match</span>span>
-                                                                                                                            </div>div>
-                                                                                                                          <h4 className="font-light text-foreground truncate">{rec.productTitle}</h4>h4>
-                                                                                                                          <p className="text-xs text-muted-foreground/50 font-light mt-1">{rec.reason}</p>p>
-                                                                                                    </div>div>
+                                                                                                                                                    <span className="text-xs text-primary/60 font-light">{rec.score}% match</span>
+                                                                                                                            </div>
+                                                                                                                          <h4 className="font-light text-foreground truncate">{rec.productTitle}</h4>
+                                                                                                                          <p className="text-xs text-muted-foreground/50 font-light mt-1">{rec.reason}</p>
+                                                                                                    </div>
                                                                                                   <div className="text-right ml-4 shrink-0">
-                                                                                                                          <p className="text-lg font-extralight text-foreground">${rec.priceAud?.toFixed(2)}</p>p>
+                                                                                                                          <p className="text-lg font-extralight text-foreground">${rec.priceAud?.toFixed(2)}</p>
                                                                                                                           <ArrowRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all ml-auto mt-1" />
-                                                                                                    </div>div>
-                                                                            </motion.div>motion.div>
+                                                                                                    </div>
+                                                                            </motion.div>
                                                                           ))}
-                                                      </div>div>
+                                                      </div>
                                                     ) : (
                                                       <p className="text-center text-muted-foreground/50 font-light">
                                                                         No matches found in this category yet. Check back soon.
-                                                      </p>p>
+                                                      </p>
                                     )}
                       
                                     <div className="flex justify-center gap-4 mt-10">
@@ -268,7 +268,7 @@ export function AIAssistant() {
                                                                       >
                                                                       <RotateCcw className="h-3 w-3" />
                                                                       Start over
-                                                    </button>button>
+                                                    </button>
                                                     <Button
                                                                         onClick={() => navigate("/shop")}
                                                                         className="rounded-full px-6 text-xs"
@@ -276,12 +276,12 @@ export function AIAssistant() {
                                                                       >
                                                                       Browse all
                                                                       <ArrowRight className="h-3 w-3 ml-2" />
-                                                    </Button>Button>
-                                    </div>div>
-                      </motion.div>motion.div>
+                                                    </Button>
+                                    </div>
+                      </motion.div>
                     )}
-                      </AnimatePresence>AnimatePresence>
-              </div>div>
-        </section>section>
+                      </AnimatePresence>
+              </div>
+        </section>
       );
-}</section>
+}
