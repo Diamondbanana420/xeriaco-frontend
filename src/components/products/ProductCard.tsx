@@ -179,6 +179,13 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           <h3 className="text-base font-light tracking-wide text-foreground/90 group-hover:text-foreground transition-colors duration-500">
             {product.name}
           </h3>
+          {/* Star Rating */}
+          <div className="flex items-center justify-center gap-0.5 my-2">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="h-3 w-3 fill-primary text-primary" />
+            ))}
+            <span className="ml-1 text-xs text-muted-foreground">(4.8)</span>
+          </div>
           <p className="text-xl font-light text-secondary/80">
             ${product.base_price.toFixed(2)}
           </p>

@@ -19,6 +19,9 @@ import {
   CheckCircle
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { UrgencyIndicators } from "@/components/products/UrgencyIndicators";
+import { ProductBenefits } from "@/components/products/ProductBenefits";
+import { ProductFAQ } from "@/components/products/ProductFAQ";
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://xeriaco-backend-production.up.railway.app';
 
@@ -238,6 +241,17 @@ export default function ProductDetail() {
                 </div>
               )}
 
+              {/* Product Benefits */}
+              <ProductBenefits 
+                productName={product.name} 
+                category={product.categories?.name}
+              />
+
+              <Separator className="my-6" />
+
+              {/* Urgency Indicators */}
+              <UrgencyIndicators productId={product.id} />
+
               <Separator className="my-6" />
 
               {/* Features */}
@@ -310,6 +324,11 @@ export default function ProductDetail() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* FAQ Section */}
+          <div className="mt-16">
+            <ProductFAQ />
           </div>
         </div>
       </main>
