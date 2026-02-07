@@ -1,8 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm-9_x"]
+
 [phases.install]
 cmds = ["npm ci"]
 
 [phases.build]
-cmds = ["VITE_API_URL=https://xeriaco-backend-production.up.railway.app npm run build"]
+cmds = ["npm run build"]
 
 [start]
-cmd = "npx serve -s dist -l 3000"
+cmd = "npm start"
