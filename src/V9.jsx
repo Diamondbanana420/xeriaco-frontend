@@ -82,6 +82,13 @@ const api = {
   system: () => api._f("/api/admin/system"),
   updatePricing: (d) => api._f("/api/admin/config/pricing",{method:"POST",body:JSON.stringify(d)}),
   marketplace: (id,ch) => api._f(`/api/marketplace/push/${id}`,{method:"POST",body:JSON.stringify({channel:ch})}),
+  // OpenClaw endpoints
+  ocStatus: () => api._f("/api/openclaw/status"),
+  ocCommand: (message, context) => api._f("/api/openclaw/command",{method:"POST",body:JSON.stringify({message,context})}),
+  ocQuick: (action) => api._f("/api/openclaw/quick",{method:"POST",body:JSON.stringify(action)}),
+  ocOverview: () => api._f("/api/openclaw/overview"),
+  ocAutoReply: (d) => api._f("/api/openclaw/support/auto-reply",{method:"POST",body:JSON.stringify(d)}),
+  ocAiEdit: (productId,instruction) => api._f("/api/openclaw/product/ai-edit",{method:"POST",body:JSON.stringify({productId,instruction})}),
 };
 
 // ── AI Functions (in-artifact Anthropic API) ──
@@ -178,6 +185,17 @@ function V9() {
   const [pipeRunning, setPipeRunning] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [cbOnline, setCbOnline] = useState(false);
+  // OpenClaw state
+  const [ocMessages, setOcMessages] = useState([{role:"system",text:"👋 OpenClaw online. I can manage products, orders, pipelines, and customer support. Try: \"show me pending orders\" or \"approve all products with score above 70\""}]);
+  const [ocInput, setOcInput] = useState("");
+  const [ocLoading, setOcLoading] = useState(false);
+  const [ocOverview, setOcOverview] = useState(null);
+  const [ocTickets, setOcTickets] = useState([]);
+  const [ocTab, setOcTab] = useState("chat"); // chat | support | products | quick
+  const [ocSupportDraft, setOcSupportDraft] = useState({email:"",subject:"",message:"",priority:"medium"});
+  const [ocAutoReplyLoading, setOcAutoReplyLoading] = useState(null);
+  const [ocProductEdit, setOcProductEdit] = useState({id:"",instruction:""});
+  const [ocEditLoading, setOcEditLoading] = useState(false);
   const autoRef = useRef(null);
   const mgrRef = useRef(null);
 
@@ -455,6 +473,94 @@ function V9() {
     return <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}><circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,.06)" strokeWidth={3}/><circle cx={size/2} cy={size/2} r={r} fill="none" stroke={co} strokeWidth={3} strokeDasharray={c} strokeDashoffset={c-(score/100)*c} strokeLinecap="round" className="score-ring"/><text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="central" fill="#e2e8f0" fontSize={size/3.5} fontWeight={700} style={{transform:"rotate(90deg)",transformOrigin:"center"}}>{score}</text></svg>;
   };
 
+  // ═══ OPENCLAW HANDLERS ═══
+  const ocSend = async (msg) => {
+    if (!msg?.trim()) return;
+    const userMsg = { role: "user", text: msg, time: new Date().toISOString() };
+    setOcMessages(p => [...p, userMsg]);
+    setOcInput("");
+    setOcLoading(true);
+    try {
+      const context = { products: prods.length, orders: orders.length, rwProducts: rwProds.length };
+      const r = await api.ocCommand(msg, context);
+      if (r) {
+        const parts = [];
+        if (r.summary) parts.push(r.summary);
+        if (r.results?.length) {
+          for (const res of r.results) {
+            if (res.success) {
+              parts.push(`✅ ${res.action}: ${JSON.stringify(res.data).slice(0,200)}`);
+            } else {
+              parts.push(`❌ ${res.action}: ${res.error}`);
+            }
+          }
+        }
+        if (r.clarification) parts.push(`❓ ${r.clarification}`);
+        if (r.raw) parts.push(r.summary || "Response received");
+        setOcMessages(p => [...p, { role: "assistant", text: parts.join("\n\n") || "Done", time: new Date().toISOString(), results: r.results }]);
+        // Refresh data after actions
+        if (r.actionsExecuted > 0) syncRw();
+      } else {
+        setOcMessages(p => [...p, { role: "assistant", text: "⚠️ No response from backend. Check Railway connection.", time: new Date().toISOString() }]);
+      }
+    } catch (err) {
+      setOcMessages(p => [...p, { role: "assistant", text: `❌ Error: ${err.message}`, time: new Date().toISOString() }]);
+    }
+    setOcLoading(false);
+  };
+
+  const ocQuickAction = async (action) => {
+    setOcLoading(true);
+    try {
+      const r = await api.ocQuick(action);
+      if (r?.success) {
+        setOcMessages(p => [...p, { role: "system", text: `✅ ${action.action}: ${JSON.stringify(r.data).slice(0,300)}`, time: new Date().toISOString() }]);
+        syncRw();
+      }
+    } catch {}
+    setOcLoading(false);
+  };
+
+  const ocFetchOverview = async () => {
+    const r = await api.ocOverview();
+    if (r) setOcOverview(r);
+  };
+
+  const ocFetchTickets = async () => {
+    const r = await api.ocQuick({ action: "list_support_tickets", filters: {} });
+    if (r?.success) setOcTickets(r.data?.supportTickets || []);
+  };
+
+  const ocCreateTicket = async () => {
+    const r = await api.ocQuick({ action: "create_ticket", ...ocSupportDraft });
+    if (r?.success) {
+      setOcMessages(p => [...p, { role: "system", text: `🎫 Ticket created for ${ocSupportDraft.email}`, time: new Date().toISOString() }]);
+      setOcSupportDraft({ email: "", subject: "", message: "", priority: "medium" });
+      ocFetchTickets();
+    }
+  };
+
+  const ocAutoReply = async (ticketId) => {
+    setOcAutoReplyLoading(ticketId);
+    const r = await api.ocQuick({ action: "auto_respond", ticketId });
+    if (r?.success && r.data?.autoResponse) {
+      setOcMessages(p => [...p, { role: "assistant", text: `💬 Auto-reply generated:\n\n${r.data.autoResponse}`, time: new Date().toISOString() }]);
+    }
+    setOcAutoReplyLoading(null);
+  };
+
+  const ocAiEditProduct = async () => {
+    if (!ocProductEdit.id || !ocProductEdit.instruction) return;
+    setOcEditLoading(true);
+    const r = await api.ocAiEdit(ocProductEdit.id, ocProductEdit.instruction);
+    if (r?.success) {
+      setOcMessages(p => [...p, { role: "assistant", text: `✏️ Updated "${r.title}" — changed: ${r.changes?.join(", ")}`, time: new Date().toISOString() }]);
+      setOcProductEdit({ id: "", instruction: "" });
+      syncRw();
+    }
+    setOcEditLoading(false);
+  };
+
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "discovery", label: "Discovery", icon: Search },
@@ -464,6 +570,7 @@ function V9() {
     { id: "railway", label: "Railway", icon: Server, badge: rwFraudCount || undefined },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
     { id: "activity", label: "Activity", icon: Activity },
+    { id: "openclaw", label: "OpenClaw", icon: Brain, badge: ocTickets.filter(t=>t.status==="open").length || undefined },
   ];
   const nav = (v) => { setView(v); setMobileMenu(false); };
 
@@ -1360,6 +1467,215 @@ function V9() {
                   <div>Auto-Discovery: {st.autoDiscoveryMin>0?`${st.autoDiscoveryMin}min`:"Off"}</div>
                 </div>
               </Panel>
+            </div>
+          )}
+
+          {/* ═══ OPENCLAW ═══ */}
+          {view === "openclaw" && (
+            <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
+              {/* OpenClaw Header */}
+              <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",background:"linear-gradient(135deg,rgba(99,102,241,.08),rgba(139,92,246,.08))",border:"1px solid rgba(99,102,241,.2)",borderRadius:12}}>
+                <Brain size={24} style={{color:"#a78bfa"}}/>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:16,fontWeight:700,color:"#e2e8f0"}}>OpenClaw AI Manager</div>
+                  <div style={{fontSize:11,color:"#94a3b8"}}>Natural language control for products, orders, pipelines & support</div>
+                </div>
+                <Btn size="sm" onClick={()=>{ocFetchOverview();ocFetchTickets();}} variant="ghost"><RefreshCw size={12}/> Refresh</Btn>
+              </div>
+
+              {/* Tab Bar */}
+              <div style={{display:"flex",gap:4,background:"rgba(15,15,25,.5)",padding:4,borderRadius:10,border:"1px solid #1e1e2e"}}>
+                {[{id:"chat",label:"💬 Chat",icon:null},{id:"support",label:"🎫 Support"},{id:"products",label:"📦 Products"},{id:"quick",label:"⚡ Quick Actions"}].map(t=>(
+                  <button key={t.id} onClick={()=>setOcTab(t.id)} style={{flex:1,padding:"8px 12px",borderRadius:8,border:"none",cursor:"pointer",fontSize:12,fontWeight:600,background:ocTab===t.id?"rgba(99,102,241,.15)":"transparent",color:ocTab===t.id?"#a5b4fc":"#64748b",transition:"all .2s"}}>{t.label}</button>
+                ))}
+              </div>
+
+              {/* CHAT TAB */}
+              {ocTab === "chat" && (
+                <Panel style={{display:"flex",flexDirection:"column",height:500}}>
+                  <Hdr icon={<Brain size={16}/>} title="OpenClaw Chat" actionLabel="Clear" action={()=>setOcMessages([{role:"system",text:"Chat cleared. Ready for commands."}])}/>
+                  <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:8,padding:"8px 0",marginBottom:8}}>
+                    {ocMessages.map((m,i)=>(
+                      <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
+                        <div style={{maxWidth:"85%",padding:"10px 14px",borderRadius:12,fontSize:12,lineHeight:1.5,whiteSpace:"pre-wrap",
+                          background:m.role==="user"?"rgba(99,102,241,.15)":m.role==="system"?"rgba(34,197,94,.08)":"rgba(30,30,50,.8)",
+                          border:`1px solid ${m.role==="user"?"rgba(99,102,241,.3)":m.role==="system"?"rgba(34,197,94,.2)":"rgba(139,92,246,.2)"}`,
+                          color:m.role==="user"?"#c7d2fe":"#e2e8f0"}}>
+                          {m.role==="assistant"&&<div style={{fontSize:9,color:"#a78bfa",marginBottom:4,fontWeight:600}}>🐾 OPENCLAW</div>}
+                          {m.text}
+                          {m.time&&<div style={{fontSize:9,color:"#475569",marginTop:4}}>{new Date(m.time).toLocaleTimeString()}</div>}
+                        </div>
+                      </div>
+                    ))}
+                    {ocLoading&&<div style={{display:"flex",gap:6,padding:12}}><span style={{width:6,height:6,borderRadius:"50%",background:"#a78bfa",animation:"pulse 1s infinite"}}/>
+                      <span style={{width:6,height:6,borderRadius:"50%",background:"#a78bfa",animation:"pulse 1s infinite .2s"}}/>
+                      <span style={{width:6,height:6,borderRadius:"50%",background:"#a78bfa",animation:"pulse 1s infinite .4s"}}/></div>}
+                  </div>
+                  <div style={{display:"flex",gap:8}}>
+                    <input value={ocInput} onChange={e=>setOcInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&ocSend(ocInput)}
+                      placeholder="Ask OpenClaw... e.g. 'approve all products scoring above 70'" style={{flex:1,padding:"10px 14px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:10,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
+                    <Btn onClick={()=>ocSend(ocInput)} loading={ocLoading}><Send size={13}/> Send</Btn>
+                  </div>
+                  {/* Suggested Commands */}
+                  <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:8}}>
+                    {["Show pending orders","List top products","Run full pipeline","How are sales today?","Kill products scoring below 30","Approve all analyzed products"].map(cmd=>(
+                      <button key={cmd} onClick={()=>ocSend(cmd)} style={{padding:"4px 10px",borderRadius:16,border:"1px solid #1e1e2e",background:"rgba(15,15,25,.5)",color:"#94a3b8",fontSize:10,cursor:"pointer"}}>{cmd}</button>
+                    ))}
+                  </div>
+                </Panel>
+              )}
+
+              {/* SUPPORT TAB */}
+              {ocTab === "support" && (
+                <div style={{display:"flex",flexDirection:"column",gap:16}}>
+                  {/* Create Ticket */}
+                  <Panel>
+                    <Hdr icon={<Users size={16}/>} title="Create Support Ticket"/>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                      <input value={ocSupportDraft.email} onChange={e=>setOcSupportDraft(d=>({...d,email:e.target.value}))} placeholder="Customer email" style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
+                      <select value={ocSupportDraft.priority} onChange={e=>setOcSupportDraft(d=>({...d,priority:e.target.value}))} style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none"}}>
+                        <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option>
+                      </select>
+                    </div>
+                    <input value={ocSupportDraft.subject} onChange={e=>setOcSupportDraft(d=>({...d,subject:e.target.value}))} placeholder="Subject" style={{width:"100%",marginTop:8,padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none",boxSizing:"border-box"}}/>
+                    <textarea value={ocSupportDraft.message} onChange={e=>setOcSupportDraft(d=>({...d,message:e.target.value}))} placeholder="Customer message..." rows={3} style={{width:"100%",marginTop:8,padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none",resize:"vertical",boxSizing:"border-box"}}/>
+                    <div style={{marginTop:8}}><Btn onClick={ocCreateTicket}><Send size={13}/> Create Ticket</Btn></div>
+                  </Panel>
+
+                  {/* Ticket List */}
+                  <Panel>
+                    <Hdr icon={<FileText size={16}/>} title={`Support Tickets (${ocTickets.length})`} actionLabel="Refresh" action={ocFetchTickets}/>
+                    {ocTickets.length===0&&<div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>No tickets yet. Create one above or use chat: "create ticket for customer@email.com"</div>}
+                    {ocTickets.map(t=>(
+                      <div key={t.id} style={{padding:10,marginBottom:6,background:"rgba(15,15,25,.4)",borderRadius:8,border:"1px solid #1e1e2e"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <div style={{fontSize:12,fontWeight:600,color:"#e2e8f0"}}>{t.subject}</div>
+                          <div style={{display:"flex",gap:4,alignItems:"center"}}>
+                            <span style={{fontSize:9,padding:"2px 6px",borderRadius:8,background:t.priority==="urgent"?"rgba(239,68,68,.15)":t.priority==="high"?"rgba(245,158,11,.15)":"rgba(99,102,241,.1)",color:t.priority==="urgent"?"#ef4444":t.priority==="high"?"#f59e0b":"#94a3b8"}}>{t.priority}</span>
+                            <span style={{fontSize:9,padding:"2px 6px",borderRadius:8,background:t.status==="open"?"rgba(34,197,94,.1)":"rgba(99,102,241,.1)",color:t.status==="open"?"#22c55e":"#94a3b8"}}>{t.status}</span>
+                          </div>
+                        </div>
+                        <div style={{fontSize:10,color:"#64748b",marginTop:4}}>{t.customer} · {new Date(t.createdAt).toLocaleDateString()}</div>
+                        <div style={{display:"flex",gap:6,marginTop:6}}>
+                          <Btn size="sm" onClick={()=>ocAutoReply(t.id)} loading={ocAutoReplyLoading===t.id}><Brain size={11}/> AI Reply</Btn>
+                          <Btn size="sm" variant="ghost" onClick={()=>ocSend(`respond to ticket ${t.id} with a helpful update`)}><Send size={11}/> Chat Reply</Btn>
+                        </div>
+                      </div>
+                    ))}
+                  </Panel>
+
+                  {/* Auto-Response Config */}
+                  <Panel style={{background:"rgba(99,102,241,.03)"}}>
+                    <Hdr icon={<Brain size={16}/>} title="AI Customer Support"/>
+                    <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.6}}>
+                      OpenClaw can automatically respond to customer inquiries. Use chat commands like:<br/>
+                      • "auto-reply to all open tickets"<br/>
+                      • "respond to ticket [id] about shipping delay"<br/>
+                      • "create ticket for customer@email.com about refund request"<br/>
+                      • "escalate ticket [id] to urgent"
+                    </div>
+                  </Panel>
+                </div>
+              )}
+
+              {/* PRODUCTS TAB — AI Edit */}
+              {ocTab === "products" && (
+                <div style={{display:"flex",flexDirection:"column",gap:16}}>
+                  <Panel>
+                    <Hdr icon={<Edit size={16}/>} title="AI Product Editor"/>
+                    <div style={{fontSize:11,color:"#94a3b8",marginBottom:10}}>Select a product and describe what to change. OpenClaw will edit it using AI.</div>
+                    <select value={ocProductEdit.id} onChange={e=>setOcProductEdit(d=>({...d,id:e.target.value}))} style={{width:"100%",padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none",boxSizing:"border-box"}}>
+                      <option value="">Select product...</option>
+                      {rwProds.map(p=><option key={p._id||p.id} value={p._id||p.id}>{p.title} ({p.status})</option>)}
+                      {prods.map(p=><option key={p.id} value={p.id}>[Local] {p.title}</option>)}
+                    </select>
+                    <textarea value={ocProductEdit.instruction} onChange={e=>setOcProductEdit(d=>({...d,instruction:e.target.value}))} placeholder="e.g. 'Make the title more catchy and add holiday-themed tags'" rows={3}
+                      style={{width:"100%",marginTop:8,padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none",resize:"vertical",boxSizing:"border-box"}}/>
+                    <div style={{marginTop:8}}><Btn onClick={ocAiEditProduct} loading={ocEditLoading}><Edit size={13}/> AI Edit Product</Btn></div>
+                  </Panel>
+
+                  {/* Bulk Actions */}
+                  <Panel>
+                    <Hdr icon={<Layers size={16}/>} title="Bulk Product Management"/>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                      <Btn size="sm" onClick={()=>ocSend("approve all products with score above 60")}><CheckCircle size={12}/> Auto-Approve (60+)</Btn>
+                      <Btn size="sm" onClick={()=>ocSend("kill all products scoring below 30 that are older than 7 days")}><Skull size={12}/> Kill Low Scores</Btn>
+                      <Btn size="sm" variant="ghost" onClick={()=>ocSend("reprice all listed products to maximize margin while staying competitive")}><DollarSign size={12}/> AI Reprice All</Btn>
+                      <Btn size="sm" variant="ghost" onClick={()=>ocSend("list products that need attention - low scores, no images, or stale")}><AlertCircle size={12}/> Needs Attention</Btn>
+                    </div>
+                  </Panel>
+
+                  {/* Overview Stats */}
+                  {ocOverview && (
+                    <Panel>
+                      <Hdr icon={<Database size={16}/>} title="System Overview"/>
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+                        <Metric icon={<Package size={14}/>} label="Products" value={ocOverview.products?.total||0} color="#6366f1" sub={`${ocOverview.products?.listed||0} listed`}/>
+                        <Metric icon={<ShoppingCart size={14}/>} label="Orders" value={ocOverview.orders?.total||0} color="#f59e0b" sub={`${ocOverview.orders?.pending||0} pending`}/>
+                        <Metric icon={<CheckCircle size={14}/>} label="Approved" value={ocOverview.products?.approved||0} color="#22c55e"/>
+                        <Metric icon={<Truck size={14}/>} label="Shipped" value={ocOverview.orders?.shipped||0} color="#06b6d4"/>
+                      </div>
+                      {ocOverview.topProducts?.length>0&&(
+                        <div style={{marginTop:12}}>
+                          <div style={{fontSize:11,fontWeight:600,color:"#94a3b8",marginBottom:6}}>Top Products</div>
+                          {ocOverview.topProducts.map((p,i)=>(
+                            <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 0",borderBottom:"1px solid rgba(255,255,255,.03)",fontSize:11}}>
+                              <span style={{color:"#e2e8f0"}}>{p.title?.slice(0,40)}</span>
+                              <span style={{color:"#a5b4fc",fontWeight:600}}>Score: {p.score}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </Panel>
+                  )}
+                </div>
+              )}
+
+              {/* QUICK ACTIONS TAB */}
+              {ocTab === "quick" && (
+                <div style={{display:"flex",flexDirection:"column",gap:16}}>
+                  <Panel>
+                    <Hdr icon={<Zap size={16}/>} title="Pipeline Control"/>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                      <Btn onClick={()=>ocQuickAction({action:"run_pipeline",type:"full"})} loading={ocLoading}><Rocket size={13}/> Full Pipeline</Btn>
+                      <Btn onClick={()=>ocQuickAction({action:"run_pipeline",type:"trend"})} loading={ocLoading}><TrendingUp size={13}/> Trend Scout</Btn>
+                      <Btn onClick={()=>ocQuickAction({action:"run_pipeline",type:"supplier"})} loading={ocLoading}><Globe size={13}/> Supplier Source</Btn>
+                      <Btn onClick={()=>ocQuickAction({action:"run_pipeline",type:"enrich"})} loading={ocLoading}><Brain size={13}/> AI Enrich</Btn>
+                      <Btn onClick={()=>ocQuickAction({action:"run_pipeline",type:"competitor"})} loading={ocLoading}><Target size={13}/> Competitor Scan</Btn>
+                    </div>
+                  </Panel>
+
+                  <Panel>
+                    <Hdr icon={<ShoppingCart size={16}/>} title="Order Management"/>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                      <Btn size="sm" onClick={()=>ocSend("show all pending orders with details")}><Clock size={12}/> View Pending</Btn>
+                      <Btn size="sm" onClick={()=>ocSend("auto-fulfill all processing orders")}><Truck size={12}/> Auto-Fulfill</Btn>
+                      <Btn size="sm" onClick={()=>ocSend("show fraud queue")} variant="ghost"><AlertTriangle size={12}/> Fraud Queue</Btn>
+                      <Btn size="sm" onClick={()=>ocSend("give me an order summary for today")} variant="ghost"><FileText size={12}/> Daily Summary</Btn>
+                    </div>
+                  </Panel>
+
+                  <Panel>
+                    <Hdr icon={<Settings size={16}/>} title="System Control"/>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                      <Btn size="sm" onClick={()=>ocQuickAction({action:"health_check"})}><Activity size={12}/> Health Check</Btn>
+                      <Btn size="sm" onClick={()=>ocQuickAction({action:"get_analytics",period:"24h"})}><TrendingUp size={12}/> 24h Analytics</Btn>
+                      <Btn size="sm" onClick={()=>ocQuickAction({action:"get_analytics",period:"7d"})} variant="ghost"><TrendingUp size={12}/> 7d Analytics</Btn>
+                      <Btn size="sm" onClick={()=>ocQuickAction({action:"pipeline_status"})} variant="ghost"><Server size={12}/> Pipeline Status</Btn>
+                      <Btn size="sm" onClick={()=>ocQuickAction({action:"get_logs",limit:10})} variant="ghost"><FileText size={12}/> Recent Logs</Btn>
+                    </div>
+                  </Panel>
+
+                  <Panel style={{background:"rgba(139,92,246,.04)"}}>
+                    <Hdr icon={<Store size={16}/>} title="Store Sync"/>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                      <Btn size="sm" onClick={()=>ocSend("sync all approved products to Shopify")}><ExternalLink size={12}/> Sync to Shopify</Btn>
+                      <Btn size="sm" onClick={()=>ocSend("sync all approved products to WooCommerce")}><ExternalLink size={12}/> Sync to WooCommerce</Btn>
+                      <Btn size="sm" onClick={()=>ocSend("check inventory levels for all listed products")} variant="ghost"><RefreshCw size={12}/> Inventory Check</Btn>
+                    </div>
+                  </Panel>
+                </div>
+              )}
             </div>
           )}
 
