@@ -29,7 +29,8 @@
     <div class="container">
         <div class="header">
             <h1>🛒 XeriaCO E-commerce Dashboard</h1>
-            <p>Emergency Frontend - Full Dashboard Available After Build Fixes</p>
+            <p>🔧 Emergency Frontend - Fully Functional with Live Backend Integration</p>
+            <p style="color: #666; font-size: 14px;">Cart System | Inventory Management | Product Catalog | Real-time API</p>
         </div>
         
         <div class="status">
@@ -43,8 +44,14 @@
             </div>
         </div>
 
+        <div class="cart-section" style="margin-bottom: 30px; padding: 20px; background: #e8f5e8; border-radius: 6px; display: none;" id="cart-section">
+            <h3>🛒 Your Cart</h3>
+            <div id="cart-items"></div>
+            <div id="cart-total" style="font-weight: bold; margin-top: 10px;"></div>
+        </div>
+
         <div class="products">
-            <h2>Products</h2>
+            <h2>Product Catalog</h2>
             <div id="products-list">
                 <div class="loading">Loading products...</div>
             </div>
@@ -53,6 +60,7 @@
 
     <script>
         const API_BASE = 'https://xeriaco-backend-production.up.railway.app/api';
+        const SESSION_ID = 'xeriaco-demo-' + Date.now();
         
         // Check backend status
         fetch(`${API_BASE}/health`)
@@ -88,8 +96,6 @@
             });
 
         function addToCart(productId) {
-            const sessionId = 'emergency-session-' + Date.now();
-            
             fetch(`${API_BASE}/cart/add`, {
                 method: 'POST',
                 headers: {
@@ -97,19 +103,54 @@
                     'X-Admin-Password': 'xeriaco2026'
                 },
                 body: JSON.stringify({
-                    sessionId: sessionId,
+                    sessionId: SESSION_ID,
                     productId: productId,
                     quantity: 1
                 })
             })
             .then(res => res.json())
             .then(data => {
-                alert(data.message || 'Added to cart!');
+                if (data.success) {
+                    alert(data.message || 'Added to cart!');
+                    loadCart();
+                } else {
+                    alert('Failed to add to cart');
+                }
             })
             .catch(err => {
                 alert('Failed to add to cart');
             });
         }
+
+        function loadCart() {
+            fetch(`${API_BASE}/cart/${SESSION_ID}`, {
+                headers: {
+                    'X-Admin-Password': 'xeriaco2026'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.items && data.items.length > 0) {
+                    document.getElementById('cart-section').style.display = 'block';
+                    const cartHtml = data.items.map(item => `
+                        <div style="display: flex; justify-content: space-between; padding: 5px 0;">
+                            <span>${item.product.title} x${item.quantity}</span>
+                            <span>$${(item.product.sellingPriceAud * item.quantity).toFixed(2)}</span>
+                        </div>
+                    `).join('');
+                    document.getElementById('cart-items').innerHTML = cartHtml;
+                    document.getElementById('cart-total').innerHTML = `<strong>Total: $${data.total} AUD (${data.itemCount} items)</strong>`;
+                } else {
+                    document.getElementById('cart-section').style.display = 'none';
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load cart:', err);
+            });
+        }
+
+        // Load cart on page load
+        setTimeout(loadCart, 1000);
     </script>
 </body>
 </html>
