@@ -196,6 +196,24 @@ function V9() {
   const [ocAutoReplyLoading, setOcAutoReplyLoading] = useState(null);
   const [ocProductEdit, setOcProductEdit] = useState({id:"",instruction:""});
   const [ocEditLoading, setOcEditLoading] = useState(false);
+  // Store state
+  const [storeProducts, setStoreProducts] = useState([]);
+  const [storeCategories, setStoreCategories] = useState(['all']);
+  const [storeCat, setStoreCat] = useState('all');
+  const [storeSearch, setStoreSearch] = useState('');
+  const [storeSort, setStoreSort] = useState('newest');
+  const [cart, setCart] = useState([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [storeView, setStoreView] = useState('browse'); // browse|product|checkout|confirmation|track|support
+  const [selProduct, setSelProduct] = useState(null);
+  const [checkoutForm, setCheckoutForm] = useState({name:'',email:'',phone:'',address:'',city:'',zip:'',country:'AU'});
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [lastOrder, setLastOrder] = useState(null);
+  const [trackInput, setTrackInput] = useState('');
+  const [trackResult, setTrackResult] = useState(null);
+  const [supportForm, setSupportForm] = useState({email:'',subject:'',message:'',orderId:''});
+  const [supportResult, setSupportResult] = useState(null);
+  const [storeLoading, setStoreLoading] = useState(false);
   const autoRef = useRef(null);
   const mgrRef = useRef(null);
 
@@ -561,8 +579,97 @@ function V9() {
     setOcEditLoading(false);
   };
 
+  // ═══ STORE FUNCTIONS ═══
+  const fetchStoreProducts = async () => {
+    setStoreLoading(true);
+    try {
+      const params = new URLSearchParams({ sort: storeSort, limit: '50' });
+      if (storeCat !== 'all') params.set('category', storeCat);
+      if (storeSearch) params.set('search', storeSearch);
+      const r = await fetch(`${RAILWAY}/api/store/products?${params}`);
+      if (r.ok) {
+        const d = await r.json();
+        setStoreProducts(d.products || []);
+        setStoreCategories(d.categories || ['all']);
+      }
+    } catch {}
+    setStoreLoading(false);
+  };
+
+  const addToCart = (product, qty = 1) => {
+    setCart(prev => {
+      const existing = prev.find(i => i.id === product.id);
+      if (existing) return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + qty } : i);
+      return [...prev, { ...product, quantity: qty }];
+    });
+    setCartOpen(true);
+  };
+
+  const removeFromCart = (id) => setCart(prev => prev.filter(i => i.id !== id));
+  const updateCartQty = (id, qty) => {
+    if (qty <= 0) return removeFromCart(id);
+    setCart(prev => prev.map(i => i.id === id ? { ...i, quantity: qty } : i));
+  };
+
+  const cartTotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+  const cartShipping = cartTotal >= 100 ? 0 : 9.95;
+  const cartTax = Math.round(cartTotal * 0.1 * 100) / 100;
+  const cartGrand = Math.round((cartTotal + cartShipping + cartTax) * 100) / 100;
+
+  const placeOrder = async () => {
+    if (!checkoutForm.name || !checkoutForm.email || !checkoutForm.address) return;
+    setCheckoutLoading(true);
+    try {
+      const r = await fetch(`${RAILWAY}/api/store/orders`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart.map(i => ({ productId: i.id, quantity: i.quantity })),
+          customer: { name: checkoutForm.name, email: checkoutForm.email, phone: checkoutForm.phone },
+          shippingAddress: { address: checkoutForm.address, city: checkoutForm.city, zip: checkoutForm.zip, country: checkoutForm.country },
+        }),
+      });
+      if (r.ok) {
+        const d = await r.json();
+        setLastOrder(d);
+        setCart([]);
+        setStoreView('confirmation');
+        log(`🛒 Order ${d.orderId}: $${d.order?.total}`, 'success');
+        syncRw();
+      }
+    } catch (err) { log(`❌ Order failed: ${err.message}`, 'error'); }
+    setCheckoutLoading(false);
+  };
+
+  const trackOrder = async () => {
+    if (!trackInput) return;
+    try {
+      const r = await fetch(`${RAILWAY}/api/store/orders/${trackInput}`);
+      if (r.ok) setTrackResult(await r.json());
+      else setTrackResult({ error: 'Order not found' });
+    } catch { setTrackResult({ error: 'Failed to track order' }); }
+  };
+
+  const submitSupport = async () => {
+    if (!supportForm.email || !supportForm.message) return;
+    try {
+      const r = await fetch(`${RAILWAY}/api/store/support`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(supportForm),
+      });
+      if (r.ok) {
+        const d = await r.json();
+        setSupportResult(d);
+        setSupportForm({ email: '', subject: '', message: '', orderId: '' });
+      }
+    } catch {}
+  };
+
+  // Fetch store products when store tab is active
+  useEffect(() => { if (view === 'store') fetchStoreProducts(); }, [view, storeCat, storeSort]);
+
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "store", label: "Storefront", icon: Store, badge: cart.length || undefined },
     { id: "discovery", label: "Discovery", icon: Search },
     { id: "products", label: "Products", icon: Package, badge: totalProductCount },
     { id: "manager", label: "Store Mgr", icon: Shield, badge: prods.filter(p=>p.review?.verdict==="kill"||p.review?.verdict==="reprice").length || undefined },
@@ -1675,6 +1782,260 @@ function V9() {
                     </div>
                   </Panel>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* ═══ STOREFRONT ═══ */}
+          {view === "store" && (
+            <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
+              {/* Store Header */}
+              <div style={{background:"linear-gradient(135deg,#0f0f1a,#1a1025)",border:"1px solid #27272a",borderRadius:16,padding:"24px 28px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div>
+                  <h1 style={{fontSize:22,fontWeight:800,color:"#f8fafc",margin:0,letterSpacing:-.5}}>XeriaCO</h1>
+                  <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>Curated Quality Products</div>
+                </div>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  {[{id:'browse',l:'Shop'},{id:'track',l:'Track Order'},{id:'support',l:'Support'}].map(t=>(
+                    <button key={t.id} onClick={()=>setStoreView(t.id)} style={{padding:"6px 14px",borderRadius:8,border:"none",cursor:"pointer",fontSize:11,fontWeight:600,background:storeView===t.id?"rgba(99,102,241,.15)":"transparent",color:storeView===t.id?"#a5b4fc":"#94a3b8"}}>{t.l}</button>
+                  ))}
+                  <button onClick={()=>setCartOpen(!cartOpen)} style={{position:"relative",padding:"8px 14px",borderRadius:10,border:"1px solid #27272a",background:"rgba(15,15,25,.8)",color:"#e2e8f0",cursor:"pointer",fontSize:12,fontWeight:600}}>
+                    <ShoppingCart size={14} style={{marginRight:6}}/>{cart.length} · ${cartTotal.toFixed(2)}
+                  </button>
+                </div>
+              </div>
+
+              {/* Cart Drawer */}
+              {cartOpen && (
+                <Panel style={{borderColor:"rgba(99,102,241,.2)"}}>
+                  <Hdr icon={<ShoppingCart size={16}/>} title={`Cart (${cart.length})`} actionLabel="Close" action={()=>setCartOpen(false)}/>
+                  {cart.length===0?<div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>Cart is empty</div>:(
+                    <>
+                      {cart.map(item=>(
+                        <div key={item.id} style={{display:"flex",alignItems:"center",gap:12,padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,.03)"}}>
+                          <div style={{width:40,height:40,borderRadius:8,background:"#1a1a2e",display:"flex",alignItems:"center",justifyContent:"center"}}><Package size={16} style={{color:"#6366f1"}}/></div>
+                          <div style={{flex:1}}>
+                            <div style={{fontSize:12,fontWeight:600,color:"#e2e8f0"}}>{item.title}</div>
+                            <div style={{fontSize:10,color:"#94a3b8"}}>${item.price.toFixed(2)} each</div>
+                          </div>
+                          <div style={{display:"flex",alignItems:"center",gap:6}}>
+                            <button onClick={()=>updateCartQty(item.id,item.quantity-1)} style={{width:24,height:24,borderRadius:6,border:"1px solid #27272a",background:"#0a0a1a",color:"#e2e8f0",cursor:"pointer",fontSize:12}}>-</button>
+                            <span style={{fontSize:12,fontWeight:600,color:"#e2e8f0",width:20,textAlign:"center"}}>{item.quantity}</span>
+                            <button onClick={()=>updateCartQty(item.id,item.quantity+1)} style={{width:24,height:24,borderRadius:6,border:"1px solid #27272a",background:"#0a0a1a",color:"#e2e8f0",cursor:"pointer",fontSize:12}}>+</button>
+                          </div>
+                          <div style={{fontSize:12,fontWeight:700,color:"#a5b4fc",width:60,textAlign:"right"}}>${(item.price*item.quantity).toFixed(2)}</div>
+                          <button onClick={()=>removeFromCart(item.id)} style={{background:"none",border:"none",cursor:"pointer"}}><X size={14} style={{color:"#ef4444"}}/></button>
+                        </div>
+                      ))}
+                      <div style={{display:"flex",flexDirection:"column",gap:4,marginTop:12,paddingTop:12,borderTop:"1px solid #27272a"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8"}}><span>Subtotal</span><span>${cartTotal.toFixed(2)}</span></div>
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8"}}><span>Shipping</span><span>{cartShipping===0?'FREE':`$${cartShipping.toFixed(2)}`}</span></div>
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8"}}><span>GST (10%)</span><span>${cartTax.toFixed(2)}</span></div>
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:14,fontWeight:700,color:"#e2e8f0",marginTop:4}}><span>Total</span><span>${cartGrand.toFixed(2)}</span></div>
+                      </div>
+                      <Btn onClick={()=>{setStoreView('checkout');setCartOpen(false);}} style={{marginTop:12,width:"100%"}}><ShoppingCart size={13}/> Proceed to Checkout</Btn>
+                    </>
+                  )}
+                </Panel>
+              )}
+
+              {/* BROWSE VIEW */}
+              {storeView === 'browse' && (
+                <>
+                  {/* Search & Filters */}
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                    <div style={{flex:1,minWidth:200,position:"relative"}}>
+                      <Search size={14} style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"#64748b"}}/>
+                      <input value={storeSearch} onChange={e=>setStoreSearch(e.target.value)} onKeyDown={e=>e.key==='Enter'&&fetchStoreProducts()} placeholder="Search products..."
+                        style={{width:"100%",padding:"10px 12px 10px 36px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:10,color:"#e2e8f0",fontSize:12,outline:"none",boxSizing:"border-box"}}/>
+                    </div>
+                    <select value={storeCat} onChange={e=>setStoreCat(e.target.value)} style={{padding:"10px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:10,color:"#e2e8f0",fontSize:12,outline:"none"}}>
+                      {storeCategories.map(c=><option key={c} value={c}>{c==='all'?'All Categories':c}</option>)}
+                    </select>
+                    <select value={storeSort} onChange={e=>setStoreSort(e.target.value)} style={{padding:"10px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:10,color:"#e2e8f0",fontSize:12,outline:"none"}}>
+                      <option value="newest">Newest</option><option value="price_low">Price: Low→High</option><option value="price_high">Price: High→Low</option><option value="popular">Most Popular</option>
+                    </select>
+                    <Btn onClick={fetchStoreProducts} loading={storeLoading} size="sm"><RefreshCw size={12}/></Btn>
+                  </div>
+
+                  {/* Product Grid */}
+                  {storeLoading?<div style={{textAlign:"center",padding:40,color:"#64748b"}}>Loading products...</div>:
+                  storeProducts.length===0?<div style={{textAlign:"center",padding:40,color:"#64748b"}}>No products found. Run the discovery pipeline to add products!</div>:(
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
+                      {storeProducts.map(p=>(
+                        <div key={p.id} onClick={()=>{setSelProduct(p);setStoreView('product');}} style={{background:"rgba(15,15,25,.6)",border:"1px solid #1e1e2e",borderRadius:12,overflow:"hidden",cursor:"pointer",transition:"all .2s"}}>
+                          <div style={{height:160,background:"linear-gradient(135deg,#0f0f2a,#1a1035)",display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
+                            {p.image?<img src={p.image} alt={p.title} style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain"}}/>:<Package size={40} style={{color:"#27272a"}}/>}
+                            {p.badge&&<span style={{position:"absolute",top:8,right:8,padding:"2px 8px",borderRadius:8,fontSize:9,fontWeight:700,background:p.badge==='Hot'?"rgba(239,68,68,.15)":"rgba(34,197,94,.15)",color:p.badge==='Hot'?"#ef4444":"#22c55e"}}>{p.badge}</span>}
+                          </div>
+                          <div style={{padding:12}}>
+                            <div style={{fontSize:10,color:"#6366f1",fontWeight:600,marginBottom:2}}>{p.category}</div>
+                            <div style={{fontSize:13,fontWeight:600,color:"#e2e8f0",marginBottom:4,lineHeight:1.3}}>{p.title}</div>
+                            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+                              <span style={{fontSize:16,fontWeight:800,color:"#22c55e"}}>${p.price.toFixed(2)}</span>
+                              {p.comparePrice>p.price&&<span style={{fontSize:11,color:"#64748b",textDecoration:"line-through"}}>${p.comparePrice.toFixed(2)}</span>}
+                            </div>
+                            <div style={{display:"flex",alignItems:"center",gap:4,fontSize:10,color:"#94a3b8"}}>
+                              <Star size={10} style={{fill:"#f59e0b",color:"#f59e0b"}}/> {p.rating} ({p.reviewCount} reviews)
+                            </div>
+                            <button onClick={e=>{e.stopPropagation();addToCart(p);}} style={{marginTop:8,width:"100%",padding:"8px 0",borderRadius:8,border:"none",background:"rgba(99,102,241,.15)",color:"#a5b4fc",fontSize:11,fontWeight:600,cursor:"pointer"}}>Add to Cart</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* PRODUCT DETAIL */}
+              {storeView === 'product' && selProduct && (
+                <Panel>
+                  <button onClick={()=>setStoreView('browse')} style={{background:"none",border:"none",color:"#6366f1",cursor:"pointer",fontSize:12,marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowRight size={12} style={{transform:"rotate(180deg)"}}/> Back to Shop</button>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24}}>
+                    <div style={{height:300,background:"linear-gradient(135deg,#0f0f2a,#1a1035)",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      {selProduct.image?<img src={selProduct.image} alt={selProduct.title} style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain"}}/>:<Package size={60} style={{color:"#27272a"}}/>}
+                    </div>
+                    <div>
+                      <div style={{fontSize:11,color:"#6366f1",fontWeight:600}}>{selProduct.category}</div>
+                      <h2 style={{fontSize:20,fontWeight:700,color:"#f8fafc",margin:"4px 0 8px"}}>{selProduct.title}</h2>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                        <Star size={14} style={{fill:"#f59e0b",color:"#f59e0b"}}/> <span style={{fontSize:13,color:"#e2e8f0"}}>{selProduct.rating}</span>
+                        <span style={{fontSize:11,color:"#64748b"}}>({selProduct.reviewCount} reviews)</span>
+                      </div>
+                      <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:12}}>
+                        <span style={{fontSize:28,fontWeight:800,color:"#22c55e"}}>${selProduct.price.toFixed(2)}</span>
+                        {selProduct.comparePrice>selProduct.price&&<span style={{fontSize:16,color:"#64748b",textDecoration:"line-through"}}>${selProduct.comparePrice.toFixed(2)}</span>}
+                      </div>
+                      <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.6,marginBottom:16}}>{selProduct.description||'Premium quality product, carefully curated for our customers.'}</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:4,marginBottom:16}}>
+                        {(selProduct.tags||[]).map(t=><span key={t} style={{padding:"3px 10px",borderRadius:12,background:"rgba(99,102,241,.08)",border:"1px solid rgba(99,102,241,.15)",fontSize:10,color:"#a5b4fc"}}>{t}</span>)}
+                      </div>
+                      <div style={{display:"flex",gap:8,marginBottom:12}}>
+                        <div style={{display:"flex",alignItems:"center",gap:4,fontSize:10,color:"#22c55e"}}><CheckCircle size={12}/> In Stock</div>
+                        <div style={{display:"flex",alignItems:"center",gap:4,fontSize:10,color:"#94a3b8"}}><Truck size={12}/> {cartTotal>=100?'Free Shipping':'$9.95 Shipping'}</div>
+                      </div>
+                      <Btn onClick={()=>addToCart(selProduct)}><ShoppingCart size={13}/> Add to Cart — ${selProduct.price.toFixed(2)}</Btn>
+                    </div>
+                  </div>
+                </Panel>
+              )}
+
+              {/* CHECKOUT */}
+              {storeView === 'checkout' && (
+                <Panel>
+                  <Hdr icon={<ShoppingCart size={16}/>} title="Checkout"/>
+                  {cart.length===0?<div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>Cart is empty. <button onClick={()=>setStoreView('browse')} style={{background:"none",border:"none",color:"#6366f1",cursor:"pointer"}}>Continue shopping</button></div>:(
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24}}>
+                      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                        <div style={{fontSize:14,fontWeight:600,color:"#e2e8f0"}}>Shipping Information</div>
+                        {[{k:'name',l:'Full Name',p:'John Smith'},{k:'email',l:'Email',p:'john@example.com'},{k:'phone',l:'Phone',p:'+61...'},{k:'address',l:'Address',p:'123 Main St'},{k:'city',l:'City',p:'Sydney'},{k:'zip',l:'Postcode',p:'2000'}].map(f=>(
+                          <label key={f.k} style={{display:"flex",flexDirection:"column",gap:3}}>
+                            <span style={{fontSize:10,color:"#64748b"}}>{f.l}</span>
+                            <input value={checkoutForm[f.k]||''} onChange={e=>setCheckoutForm(d=>({...d,[f.k]:e.target.value}))} placeholder={f.p}
+                              style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
+                          </label>
+                        ))}
+                      </div>
+                      <div>
+                        <div style={{fontSize:14,fontWeight:600,color:"#e2e8f0",marginBottom:12}}>Order Summary</div>
+                        {cart.map(i=>(
+                          <div key={i.id} style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#94a3b8",padding:"4px 0"}}><span>{i.title} × {i.quantity}</span><span>${(i.price*i.quantity).toFixed(2)}</span></div>
+                        ))}
+                        <div style={{borderTop:"1px solid #27272a",marginTop:8,paddingTop:8,display:"flex",flexDirection:"column",gap:4}}>
+                          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8"}}><span>Subtotal</span><span>${cartTotal.toFixed(2)}</span></div>
+                          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8"}}><span>Shipping</span><span>{cartShipping===0?'FREE':`$${cartShipping.toFixed(2)}`}</span></div>
+                          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8"}}><span>GST</span><span>${cartTax.toFixed(2)}</span></div>
+                          <div style={{display:"flex",justifyContent:"space-between",fontSize:16,fontWeight:700,color:"#f8fafc",marginTop:4}}><span>Total</span><span>${cartGrand.toFixed(2)}</span></div>
+                        </div>
+                        <Btn onClick={placeOrder} loading={checkoutLoading} style={{marginTop:16,width:"100%"}}><Check size={13}/> Place Order — ${cartGrand.toFixed(2)}</Btn>
+                        <div style={{fontSize:9,color:"#475569",textAlign:"center",marginTop:8}}>🔒 Secure checkout · Free shipping over $100</div>
+                      </div>
+                    </div>
+                  )}
+                </Panel>
+              )}
+
+              {/* ORDER CONFIRMATION */}
+              {storeView === 'confirmation' && lastOrder && (
+                <Panel style={{textAlign:"center",padding:32}}>
+                  <div style={{fontSize:48,marginBottom:8}}>✅</div>
+                  <h2 style={{fontSize:20,fontWeight:700,color:"#22c55e",margin:"0 0 4px"}}>Order Confirmed!</h2>
+                  <div style={{fontSize:14,color:"#e2e8f0",fontWeight:600}}>{lastOrder.orderId}</div>
+                  <div style={{fontSize:12,color:"#94a3b8",marginTop:4}}>Total: ${lastOrder.order?.total?.toFixed(2)}</div>
+                  <div style={{fontSize:11,color:"#64748b",marginTop:8}}>Estimated delivery: {lastOrder.order?.estimatedDelivery}</div>
+                  <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:16}}>
+                    <Btn onClick={()=>setStoreView('browse')}><Package size={13}/> Continue Shopping</Btn>
+                    <Btn variant="ghost" onClick={()=>{setTrackInput(lastOrder.orderId);setStoreView('track');}}><Truck size={13}/> Track Order</Btn>
+                  </div>
+                </Panel>
+              )}
+
+              {/* ORDER TRACKING */}
+              {storeView === 'track' && (
+                <Panel>
+                  <Hdr icon={<Truck size={16}/>} title="Track Your Order"/>
+                  <div style={{display:"flex",gap:8,marginBottom:16}}>
+                    <input value={trackInput} onChange={e=>setTrackInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&trackOrder()} placeholder="Enter order ID (e.g. XCO-...)"
+                      style={{flex:1,padding:"10px 14px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:10,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
+                    <Btn onClick={trackOrder}><Search size={13}/> Track</Btn>
+                  </div>
+                  {trackResult && !trackResult.error && (
+                    <div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                        <div><div style={{fontSize:14,fontWeight:700,color:"#e2e8f0"}}>{trackResult.orderId}</div><div style={{fontSize:10,color:"#64748b"}}>{new Date(trackResult.createdAt).toLocaleDateString()}</div></div>
+                        <span style={{padding:"4px 12px",borderRadius:8,fontSize:11,fontWeight:600,background:trackResult.status==='delivered'?"rgba(34,197,94,.15)":"rgba(99,102,241,.15)",color:trackResult.status==='delivered'?"#22c55e":"#a5b4fc"}}>{trackResult.status}</span>
+                      </div>
+                      {trackResult.trackingNumber&&<div style={{fontSize:11,color:"#94a3b8",marginBottom:8}}>Tracking: {trackResult.trackingNumber} ({trackResult.carrier||'Standard'})</div>}
+                      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                        {(trackResult.statusHistory||[]).map((h,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"6px 0"}}>
+                            <div style={{width:8,height:8,borderRadius:"50%",background:i===0?"#22c55e":"#27272a",marginTop:3,flexShrink:0}}/>
+                            <div><div style={{fontSize:12,color:"#e2e8f0",fontWeight:500}}>{h.status}</div><div style={{fontSize:9,color:"#475569"}}>{new Date(h.time).toLocaleString()}{h.note?` — ${h.note}`:''}</div></div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{marginTop:12,borderTop:"1px solid #1e1e2e",paddingTop:12}}>
+                        {(trackResult.items||[]).map((i,idx)=>(
+                          <div key={idx} style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#94a3b8",padding:"3px 0"}}><span>{i.title} × {i.quantity}</span><span>${(i.price*i.quantity).toFixed(2)}</span></div>
+                        ))}
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:13,fontWeight:700,color:"#e2e8f0",marginTop:6}}><span>Total</span><span>${trackResult.total?.toFixed(2)}</span></div>
+                      </div>
+                    </div>
+                  )}
+                  {trackResult?.error&&<div style={{fontSize:12,color:"#ef4444",textAlign:"center",padding:12}}>{trackResult.error}</div>}
+                </Panel>
+              )}
+
+              {/* CUSTOMER SUPPORT */}
+              {storeView === 'support' && (
+                <Panel>
+                  <Hdr icon={<Users size={16}/>} title="Customer Support"/>
+                  {supportResult?(
+                    <div style={{textAlign:"center",padding:20}}>
+                      <div style={{fontSize:32,marginBottom:8}}>📨</div>
+                      <div style={{fontSize:14,fontWeight:600,color:"#22c55e"}}>Inquiry Received!</div>
+                      <div style={{fontSize:12,color:"#94a3b8",marginTop:4}}>{supportResult.message}</div>
+                      {supportResult.autoResponse&&(
+                        <div style={{marginTop:12,padding:12,background:"rgba(99,102,241,.05)",borderRadius:10,border:"1px solid rgba(99,102,241,.15)",textAlign:"left"}}>
+                          <div style={{fontSize:9,color:"#a78bfa",fontWeight:600,marginBottom:4}}>🐾 AI RESPONSE</div>
+                          <div style={{fontSize:12,color:"#e2e8f0",lineHeight:1.6,whiteSpace:"pre-wrap"}}>{supportResult.autoResponse}</div>
+                        </div>
+                      )}
+                      <Btn onClick={()=>setSupportResult(null)} style={{marginTop:12}}>Submit Another Inquiry</Btn>
+                    </div>
+                  ):(
+                    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                        <input value={supportForm.email} onChange={e=>setSupportForm(d=>({...d,email:e.target.value}))} placeholder="Your email" style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
+                        <input value={supportForm.orderId} onChange={e=>setSupportForm(d=>({...d,orderId:e.target.value}))} placeholder="Order ID (optional)" style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
+                      </div>
+                      <input value={supportForm.subject} onChange={e=>setSupportForm(d=>({...d,subject:e.target.value}))} placeholder="Subject" style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
+                      <textarea value={supportForm.message} onChange={e=>setSupportForm(d=>({...d,message:e.target.value}))} placeholder="How can we help?" rows={4} style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none",resize:"vertical"}}/>
+                      <Btn onClick={submitSupport}><Send size={13}/> Submit Inquiry</Btn>
+                      <div style={{fontSize:10,color:"#475569",textAlign:"center"}}>Our AI-powered support team typically responds within minutes</div>
+                    </div>
+                  )}
+                </Panel>
               )}
             </div>
           )}
