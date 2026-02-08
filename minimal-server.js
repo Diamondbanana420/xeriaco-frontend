@@ -18,17 +18,25 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Serve emergency frontend
-  const emergencyPath = path.join(__dirname, 'public', 'emergency.html');
+  // Serve main frontend
+  const indexPath = path.join(__dirname, 'index.html');
   
   try {
-    const content = fs.readFileSync(emergencyPath, 'utf8');
+    const content = fs.readFileSync(indexPath, 'utf8');
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(content);
   } catch (err) {
     console.error('❌ Error serving file:', err);
-    res.writeHead(500, { 'Content-Type': 'text/plain' });
-    res.end('XeriaCO Emergency Mode - File Error');
+    // Fallback to emergency frontend
+    try {
+      const emergencyPath = path.join(__dirname, 'public', 'emergency.html');
+      const emergencyContent = fs.readFileSync(emergencyPath, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(emergencyContent);
+    } catch (err2) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('XeriaCO Frontend - Unable to serve content');
+    }
   }
 });
 
