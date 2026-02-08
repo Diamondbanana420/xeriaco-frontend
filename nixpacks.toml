@@ -2,4 +2,4 @@
 nixPkgs = ["nodejs_20"]
 
 [start]
-cmd = "node server.mjs"
+cmd = "node serve.cjs"
