@@ -20,6 +20,7 @@ app.get('/health', (req, res) => {
 const distPath = path.join(__dirname, 'dist');
 if (!fs.existsSync(distPath)) {
   console.error('ERROR: dist directory not found. Build may have failed.');
+  console.log('Available files:', fs.readdirSync(__dirname));
   process.exit(1);
 }
 
