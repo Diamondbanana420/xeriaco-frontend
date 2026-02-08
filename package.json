@@ -1,12 +1,12 @@
 {
-  "name": "xeriaco-v9",
+  "name": "xeriaco-frontend",
   "private": true,
   "version": "9.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build && node validate-build.cjs",
-    "start": "node validate-build.cjs && node server.cjs",
+    "start": "node validate-build.cjs && node serve.cjs",
     "preview": "vite preview",
     "validate": "node validate-build.cjs"
   },
