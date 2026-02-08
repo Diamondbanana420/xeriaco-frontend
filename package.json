@@ -1,25 +1,16 @@
 {
   "name": "xeriaco-frontend",
   "private": true,
-  "version": "9.0.1",
-  "type": "module",
+  "version": "1.0.0",
   "scripts": {
-    "dev": "vite",
-    "build": "mkdir -p dist && cp index.html dist/ && cp -r public dist/ 2>/dev/null || echo 'Static build complete'",
-    "start": "python3 server.py",
-    "serve": "python3 server.py",
-    "preview": "vite preview"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "echo 'No build required - static HTML'"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "recharts": "^2.12.7",
-    "lucide-react": "^0.263.1",
-    "serve": "^14.2.0",
     "express": "^4.18.2"
   },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.4.2"
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

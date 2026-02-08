@@ -1,5 +1,0 @@
-[build]
-buildCommand = "mkdir -p dist && cp index.html dist/ && cp -r public dist/ 2>/dev/null || true"
-
-[staticAssetsDir]
-staticAssetsDir = "dist"

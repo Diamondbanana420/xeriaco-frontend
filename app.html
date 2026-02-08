@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XeriaCO - E-commerce Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 12px; margin-bottom: 30px; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 8px; }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
+        .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .status-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; border-left: 4px solid #667eea; }
+        .status-card.online { border-left-color: #10b981; }
+        .status-card.offline { border-left-color: #ef4444; }
+        .status-card h3 { color: #374151; margin-bottom: 8px; }
+        .status-card p { font-size: 1.1rem; color: #6b7280; }
+        .products-section { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+        .product-card { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; transition: all 0.3s; background: white; }
+        .product-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .product-image { width: 100%; height: 200px; object-fit: cover; }
+        .product-info { padding: 20px; }
+        .product-title { font-size: 1.3rem; font-weight: 600; color: #111827; margin-bottom: 8px; }
+        .product-price { font-size: 1.4rem; color: #059669; font-weight: bold; margin-bottom: 10px; }
+        .product-description { color: #6b7280; margin-bottom: 15px; line-height: 1.5; }
+        .btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: all 0.3s; width: 100%; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+        .cart-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; display: none; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+        .cart-total { font-size: 1.3rem; font-weight: bold; color: #059669; margin-top: 15px; text-align: center; }
+        .loading { text-align: center; padding: 40px; color: #6b7280; }
+        .error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .notification { position: fixed; top: 20px; right: 20px; z-index: 1000; min-width: 300px; border-radius: 8px; padding: 15px; }
+        .notification.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
+        .notification.error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 XeriaCO</h1>
+            <p>E-commerce Platform - Fully Integrated with Backend</p>
+        </div>
+
+        <div class="status-grid">
+            <div class="status-card" id="backend-status">
+                <h3>Backend API</h3>
+                <p id="backend-text">Checking...</p>
+            </div>
+            <div class="status-card online" id="frontend-status">
+                <h3>Frontend</h3>
+                <p>Online & Integrated</p>
+            </div>
+            <div class="status-card" id="cart-status">
+                <h3>Shopping Cart</h3>
+                <p id="cart-text">Ready</p>
+            </div>
+            <div class="status-card" id="products-status">
+                <h3>Product Catalog</h3>
+                <p id="products-text">Loading...</p>
+            </div>
+        </div>
+
+        <div class="cart-section" id="cart-section">
+            <h2>🛒 Shopping Cart</h2>
+            <div id="cart-items"></div>
+            <div class="cart-total" id="cart-total"></div>
+        </div>
+
+        <div class="products-section">
+            <h2>Product Catalog</h2>
+            <div id="products-container">
+                <div class="loading">Loading products from backend...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://xeriaco-backend-production.up.railway.app/api';
+        const SESSION_ID = 'xeriaco-integrated-' + Date.now();
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 XeriaCO Frontend initializing...');
+            checkBackend();
+            loadProducts();
+            loadCart();
+        });
+
+        // Check backend status
+        async function checkBackend() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                document.getElementById('backend-status').className = 'status-card online';
+                document.getElementById('backend-text').textContent = `Online - ${data.service} v${data.version}`;
+                
+                console.log('✅ Backend connected:', data);
+            } catch (error) {
+                document.getElementById('backend-status').className = 'status-card offline';
+                document.getElementById('backend-text').textContent = 'Offline';
+                console.error('❌ Backend connection failed:', error);
+            }
+        }
+
+        // Load products from backend
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_BASE}/products`);
+                const data = await response.json();
+                
+                console.log('📦 Products loaded:', data.products.length);
+                
+                document.getElementById('products-status').className = 'status-card online';
+                document.getElementById('products-text').textContent = `${data.products.length} Products`;
+                
+                const productsHTML = data.products.map(product => `
+                    <div class="product-card">
+                        <img src="${product.featuredImage}" alt="${product.title}" class="product-image" />
+                        <div class="product-info">
+                            <div class="product-title">${product.title}</div>
+                            <div class="product-price">$${product.sellingPriceAud.toFixed(2)} AUD</div>
+                            <div class="product-description">${product.description}</div>
+                            <button class="btn" onclick="addToCart('${product._id}', '${product.title}')">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('products-container').innerHTML = 
+                    `<div class="products-grid">${productsHTML}</div>`;
+                    
+            } catch (error) {
+                console.error('❌ Failed to load products:', error);
+                document.getElementById('products-status').className = 'status-card offline';
+                document.getElementById('products-text').textContent = 'Error';
+                document.getElementById('products-container').innerHTML = 
+                    '<div class="error">Failed to load products from backend</div>';
+            }
+        }
+
+        // Add product to cart
+        async function addToCart(productId, productTitle) {
+            try {
+                const response = await fetch(`${API_BASE}/cart/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Password': 'xeriaco2026'
+                    },
+                    body: JSON.stringify({
+                        sessionId: SESSION_ID,
+                        productId: productId,
+                        quantity: 1
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(`${productTitle} added to cart!`, 'success');
+                    loadCart();
+                    console.log('✅ Added to cart:', productTitle);
+                } else {
+                    showNotification('Failed to add to cart', 'error');
+                }
+                
+            } catch (error) {
+                console.error('❌ Add to cart failed:', error);
+                showNotification('Failed to add to cart', 'error');
+            }
+        }
+
+        // Load cart from backend
+        async function loadCart() {
+            try {
+                const response = await fetch(`${API_BASE}/cart/${SESSION_ID}`, {
+                    headers: {
+                        'X-Admin-Password': 'xeriaco2026'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.items && data.items.length > 0) {
+                    document.getElementById('cart-section').style.display = 'block';
+                    document.getElementById('cart-status').className = 'status-card online';
+                    document.getElementById('cart-text').textContent = `${data.itemCount} Items`;
+                    
+                    const cartHTML = data.items.map(item => `
+                        <div class="cart-item">
+                            <span>${item.product.title} × ${item.quantity}</span>
+                            <span>$${(item.product.sellingPriceAud * item.quantity).toFixed(2)}</span>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('cart-items').innerHTML = cartHTML;
+                    document.getElementById('cart-total').innerHTML = 
+                        `Total: $${data.total} AUD (${data.itemCount} items)`;
+                        
+                    console.log('🛒 Cart loaded:', data.itemCount, 'items');
+                } else {
+                    document.getElementById('cart-section').style.display = 'none';
+                    document.getElementById('cart-status').className = 'status-card online';
+                    document.getElementById('cart-text').textContent = 'Empty';
+                }
+                
+            } catch (error) {
+                console.error('❌ Failed to load cart:', error);
+                document.getElementById('cart-status').className = 'status-card offline';
+                document.getElementById('cart-text').textContent = 'Error';
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 3000);
+        }
+
+        console.log('🎯 XeriaCO Frontend ready for backend integration');
+    </script>
+</body>
+</html>
