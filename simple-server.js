@@ -34,18 +34,29 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'xeriaco-frontend-simple' });
 });
 
+// Serve emergency frontend if main build fails
+app.get('/emergency', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'emergency.html'));
+});
+
 if (distExists) {
+  // Serve built app
   app.use(express.static(distPath));
   app.get('*', (req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
+    const indexPath = path.join(distPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      // Fallback to emergency frontend
+      res.redirect('/emergency');
+    }
   });
 } else {
+  console.log('⚠️  Build not found - serving emergency frontend');
+  // Serve emergency frontend
+  app.use('/assets', express.static(path.join(__dirname, 'public')));
   app.get('*', (req, res) => {
-    res.status(500).json({
-      error: 'Build not found',
-      message: 'The dist directory does not exist. Build may have failed.',
-      debug: '/debug'
-    });
+    res.sendFile(path.join(__dirname, 'public', 'emergency.html'));
   });
 }
 
