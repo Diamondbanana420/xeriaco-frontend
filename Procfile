@@ -1,1 +1,1 @@
-web: node minimal-server.js
+web: python3 server.py

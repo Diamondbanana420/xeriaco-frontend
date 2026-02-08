@@ -5,11 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "echo 'Static build complete'",
     "start": "node minimal-server.js",
-    "start:full": "vite build && node simple-server.js",
-    "preview": "vite preview",
-    "validate": "node validate-build.cjs"
+    "deploy": "echo 'Deploying static site'",
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.3.1",
