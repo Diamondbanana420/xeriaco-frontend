@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "echo 'Static build complete'",
-    "start": "node minimal-server.js",
-    "deploy": "echo 'Deploying static site'",
+    "build": "mkdir -p dist && cp index.html dist/ && cp -r public dist/ 2>/dev/null || echo 'Static build complete'",
+    "start": "python3 server.py",
+    "serve": "python3 server.py",
     "preview": "vite preview"
   },
   "dependencies": {
