@@ -1,7 +1,7 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+COPY package.json ./
+RUN npm install
 COPY . .
 RUN npm run build
 
@@ -10,6 +10,6 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/serve.js ./
 COPY --from=builder /app/package.json ./
-RUN npm install express
+RUN npm install --production
 EXPOSE 3000
 CMD ["node", "serve.js"]
