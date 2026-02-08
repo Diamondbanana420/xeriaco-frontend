@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node validate-build.cjs",
-    "start": "node validate-build.cjs && node serve.cjs",
+    "start": "node simple-server.js",
+    "start:validated": "node validate-build.cjs && node serve.cjs",
     "preview": "vite preview",
     "validate": "node validate-build.cjs"
   },
