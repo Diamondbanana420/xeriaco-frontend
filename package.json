@@ -1,16 +1,8 @@
 {
   "name": "xeriaco-frontend",
   "private": true,
-  "version": "1.0.0",
+  "version": "9.0.0",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "build": "echo 'No build required - static HTML'"
-  },
-  "dependencies": {
-    "express": "^4.18.2"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "start": "node server.js"
   }
 }
