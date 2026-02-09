@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback, useRef, Component } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, BarChart, Bar, Cell, PieChart, Pie, Legend } from "recharts";
 import { Search, Sparkles, LayoutDashboard, Activity, Box, Globe, Settings, Menu, X, RefreshCw, TrendingUp, Target, DollarSign, ChevronDown, ChevronUp, Brain, FileText, Zap, Copy, Check, AlertCircle, Package, Star, StickyNote, Filter, Download, Play, Pause, Send, Bell, Link, ExternalLink, Timer, Rocket, ArrowUpDown, Hash, Grid, Image, Edit, AlertTriangle, Shield, Skull, Repeat, Power, Wifi, WifiOff, ShoppingCart, ArrowRight, Users, Eye, Truck, Clock, Store, Database, Server, Layers, Award, Percent, RotateCcw, Trash2, CheckCircle, XCircle, Radio, Tag } from "lucide-react";
 
-// ═══════════════════════════════════════════════════════════════════
-//  XERIACO V9 — COMBINED OPTIMIZED DROPSHIPPING COMMAND CENTER
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  XERIACO V9 â€” COMBINED OPTIMIZED DROPSHIPPING COMMAND CENTER
 //  Merges V8 AI Automation Suite + Railway Production Backend
-// ═══════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-// ── Config ──
+// â”€â”€ Config â”€â”€
 const STORAGE_KEY = "xeriaco_state_v9";
 const ORDERS_KEY = "xeriaco_orders_v1";
 const ANALYTICS_KEY = "xeriaco_analytics_v1";
@@ -19,17 +19,17 @@ const CLAWDBOT_WH = "https://distracted-borg.preview.emergentagent.com/api/webho
 const CLAWDBOT_HP = "https://distracted-borg.preview.emergentagent.com/api/webhook/health";
 const ORDER_STATUSES = ["pending","processing","supplier_ordered","shipped","in_transit","delivered"];
 const STATUS_LABELS = {pending:"Order Placed",processing:"Processing",supplier_ordered:"Ordered from Supplier",shipped:"Shipped",in_transit:"In Transit",delivered:"Delivered"};
-const STATUS_ICONS = {pending:"📋",processing:"⚙️",supplier_ordered:"📦",shipped:"🚚",in_transit:"✈️",delivered:"✅"};
-const CHANNELS = [{id:"shopify",name:"Shopify",icon:"🟢",c:"#96bf48"},{id:"woocommerce",name:"WooCommerce",icon:"🟣",c:"#7f54b3"},{id:"amazon",name:"Amazon AU",icon:"🟠",c:"#ff9900"},{id:"ebay",name:"eBay AU",icon:"🔵",c:"#0064d2"},{id:"facebook",name:"Facebook",icon:"🔷",c:"#1877f2"},{id:"temu",name:"Temu",icon:"🟤",c:"#fb7701"}];
+const STATUS_ICONS = {pending:"ðŸ“‹",processing:"âš™ï¸",supplier_ordered:"ðŸ“¦",shipped:"ðŸšš",in_transit:"âœˆï¸",delivered:"âœ…"};
+const CHANNELS = [{id:"shopify",name:"Shopify",icon:"ðŸŸ¢",c:"#96bf48"},{id:"woocommerce",name:"WooCommerce",icon:"ðŸŸ£",c:"#7f54b3"},{id:"amazon",name:"Amazon AU",icon:"ðŸŸ ",c:"#ff9900"},{id:"ebay",name:"eBay AU",icon:"ðŸ”µ",c:"#0064d2"},{id:"facebook",name:"Facebook",icon:"ðŸ”·",c:"#1877f2"},{id:"temu",name:"Temu",icon:"ðŸŸ¤",c:"#fb7701"}];
 
-const DISC_SYS = `You are an elite dropshipping product research AI. Find 3 products that are: 1. TRENDING RIGHT NOW on TikTok Shop, Instagram, Amazon Movers & Shakers 2. FINANCIALLY PROFITABLE — supplier cost low enough for 3x-5x markup, margins 60-80%+ 3. HIGH DEMAND, LOW SATURATION. REJECT below 60% margin. Return ONLY JSON array of 3 objects: title, sourcePlatform ("AliExpress"|"CJ Dropship"), supplierPrice (USD), sellingPrice (USD), profitMargin (%), category, estimatedMonthlySales, rating (1-5), trendReason, competitionLevel ("Low"|"Medium"|"High"). No markdown.`;
+const DISC_SYS = `You are an elite dropshipping product research AI. Find 3 products that are: 1. TRENDING RIGHT NOW on TikTok Shop, Instagram, Amazon Movers & Shakers 2. FINANCIALLY PROFITABLE â€” supplier cost low enough for 3x-5x markup, margins 60-80%+ 3. HIGH DEMAND, LOW SATURATION. REJECT below 60% margin. Return ONLY JSON array of 3 objects: title, sourcePlatform ("AliExpress"|"CJ Dropship"), supplierPrice (USD), sellingPrice (USD), profitMargin (%), category, estimatedMonthlySales, rating (1-5), trendReason, competitionLevel ("Low"|"Medium"|"High"). No markdown.`;
 const DISC_USR = "Search for the top trending profitable dropshipping products right now. Find what's viral on TikTok Shop, selling fast on Amazon, trending on social media. Pick 3 diverse winning products with high margins.";
 const ANAL_SYS = `You are a senior e-commerce analyst. Analyze for REAL dropshipping viability. Be brutally honest. Return ONLY JSON: trendScore (0-100), demandScore (0-100), competitionScore (0-100, 100=low is GOOD), overallScore (0-100), recommendedSellingPrice (USD), targetAudience, marketingAngle, risks (array), reasoning (2-3 sentences). No markdown.`;
 
-// ── Default State ──
+// â”€â”€ Default State â”€â”€
 const defState = () => ({
   products:[], aiCalls:0, aiCostUsd:0, discoveryLog:[], activityLog:[],
-  discordWebhook:DISCORD_WH, autoDiscoveryMin:10,
+  discordWebhook:DISCORD_WH, autoDiscoveryMin:0,
   customDiscoveryPrompt:"", customAnalysisPrompt:"", customDiscoveryUser:"",
   storeManager:{
     enabled:false, autoKillDays:7, autoKillMinScore:50,
@@ -41,13 +41,13 @@ const defState = () => ({
   },
 });
 
-// ── Storage ──
+// â”€â”€ Storage â”€â”€
 const sto = {
-  get: async (k) => { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : null; } catch { return null; } },
-  set: async (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  get: async (k) => { try { const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null; } catch { return null; } },
+  set: async (k, v) => { try { await window.storage.set(k, JSON.stringify(v)); } catch {} },
 };
 
-// ── Railway API Client ──
+// â”€â”€ Railway API Client â”€â”€
 const api = {
   _f: async (ep, opts={}) => {
     try {
@@ -82,23 +82,39 @@ const api = {
   system: () => api._f("/api/admin/system"),
   updatePricing: (d) => api._f("/api/admin/config/pricing",{method:"POST",body:JSON.stringify(d)}),
   marketplace: (id,ch) => api._f(`/api/marketplace/push/${id}`,{method:"POST",body:JSON.stringify({channel:ch})}),
-  // OpenClaw endpoints
-  ocStatus: () => api._f("/api/openclaw/status"),
-  ocCommand: (message, context) => api._f("/api/openclaw/command",{method:"POST",body:JSON.stringify({message,context})}),
-  ocQuick: (action) => api._f("/api/openclaw/quick",{method:"POST",body:JSON.stringify(action)}),
-  ocOverview: () => api._f("/api/openclaw/overview"),
-  ocAutoReply: (d) => api._f("/api/openclaw/support/auto-reply",{method:"POST",body:JSON.stringify(d)}),
-  ocAiEdit: (productId,instruction) => api._f("/api/openclaw/product/ai-edit",{method:"POST",body:JSON.stringify({productId,instruction})}),
 };
 
-// ── AI Functions (in-artifact Anthropic API) ──
-const aiCall = async (sys, usr, search=false) => {
-  const r = await fetch(`${RAILWAY}/api/ai/chat`,{method:"POST",headers:{"Content-Type":"application/json","X-Admin-Password":ADMIN_PW},body:JSON.stringify({system:sys,message:usr,search})});
-  const d = await r.json();
-  return d.content || "";
+// â”€â”€ AI Functions (in-artifact Anthropic API) â”€â”€
+const aiCall = async (sys, usr, search=false, retries=2) => {
+  const body = {model:"claude-sonnet-4-5-20250929",max_tokens:2048,system:sys,messages:[{role:"user",content:usr}]};
+  if (search) body.tools = [{type:"web_search_20250305",name:"web_search"}];
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const r = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+      const d = await r.json();
+      if (d.error) {
+        const msg = d.error?.message || d.error?.type || JSON.stringify(d.error);
+        if (attempt < retries && (r.status === 429 || r.status >= 500)) {
+          await new Promise(ok => setTimeout(ok, (attempt+1)*2000));
+          continue;
+        }
+        throw new Error(`AI API error: ${msg}`);
+      }
+      const text = d.content?.filter(c=>c.type==="text").map(c=>c.text).join("") || "";
+      if (!text) throw new Error("AI returned empty response");
+      return text;
+    } catch(e) {
+      if (attempt < retries && !e.message?.includes("AI API error")) {
+        await new Promise(ok => setTimeout(ok, (attempt+1)*2000));
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw new Error("AI call failed after retries");
 };
 const aiDiscover = (cs,cu) => aiCall(cs||DISC_SYS, cu||DISC_USR, true);
-const aiAnalyze = (p,cs) => aiCall(cs||ANAL_SYS, `Analyze: "${p.title}" — Cat: ${p.category}, Supplier: $${p.supplierPrice}, Sell: $${p.sellingPrice}, Margin: ${p.profitMargin}%, Competition: ${p.competitionLevel}, Trend: ${p.trendReason}`);
+const aiAnalyze = (p,cs) => aiCall(cs||ANAL_SYS, `Analyze: "${p.title}" â€” Cat: ${p.category}, Supplier: $${p.supplierPrice}, Sell: $${p.sellingPrice}, Margin: ${p.profitMargin}%, Competition: ${p.competitionLevel}, Trend: ${p.trendReason}`);
 const aiListing = (p,a) => aiCall(`Generate a complete product listing. Return ONLY JSON: shopifyTitle, shopifyDescription (rich HTML 200-400 words), tags (8-12 array), seoTitle (max 60), seoDescription (max 155), bulletPoints (5 array), targetKeywords (5 array), suggestedCollections (array). No markdown.`, `Product: "${p.title}" | Cat: ${p.category} | Price: $${p.sellingPrice} | Analysis: ${JSON.stringify(a)}`);
 const aiCompetitor = (p) => aiCall(`Research competitive landscape. Return ONLY JSON: competitors (array {name,price,rating,url}), avgMarketPrice, pricePosition, saturationLevel (0-100), opportunity, threats (array). No markdown.`, `Competitors for: "${p.title}" in ${p.category}`, true);
 const aiSupplier = (p) => aiCall(`Find best suppliers. Return ONLY JSON: suppliers (array {name,platform,url,price,moq,shippingDays,rating}), bestOption {name,reason}, alternativeStrategy. No markdown.`, `Suppliers for: "${p.title}" | Cat: ${p.category} | Budget: $${(p.supplierPrice*1.2).toFixed(2)}`, true);
@@ -110,19 +126,19 @@ const aiScale = (p) => aiCall(`Analyze scaling potential. Return ONLY JSON: scal
 const aiForecast = (p) => aiCall(`Forecast seasonal trends. Return ONLY JSON: peakMonths (array), lowMonths (array), currentDemand ("rising"|"stable"|"falling"), forecast30d, forecast90d, holidayOpportunities (array), actionNow. No markdown.`, `"${p.title}" | Cat: ${p.category} | Month: ${new Date().toLocaleString("default",{month:"long"})}`, true);
 const aiGenOrder = (o) => aiCall(`Generate supplier order. Return ONLY JSON: supplierName, orderItems (array {title,qty,unitPrice,totalPrice}), shippingMethod, estimatedDelivery, totalCost, orderNotes. No markdown.`, `Order for: ${JSON.stringify(o.items)} shipping to ${o.customer?.country||"AU"}`);
 
-// ── Webhooks ──
+// â”€â”€ Webhooks â”€â”€
 const webhook = async (url,p) => { if(!url) return; try { await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(p)}); } catch {} };
 const clawdbot = async (cmd) => { try { await fetch(CLAWDBOT_WH,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({source:"xeriaco-v9",command:cmd,timestamp:new Date().toISOString()})}); } catch {} };
 const clawdbotHealth = async () => { try { const r = await fetch(CLAWDBOT_HP,{signal:AbortSignal.timeout(5000)}); return r.ok; } catch { return false; } };
 
-// ── Error Boundary ──
+// â”€â”€ Error Boundary â”€â”€
 class EB extends Component {
   state={e:null};
   static getDerivedStateFromError(e){return{e};}
-  render(){return this.state.e?<div style={{padding:40,color:"#ef4444",background:"#0a0a1a",minHeight:"100vh",fontFamily:"monospace"}}><h2>⚠️ V9 Error</h2><pre style={{whiteSpace:"pre-wrap"}}>{this.state.e.message}</pre><button onClick={()=>this.setState({e:null})} style={{marginTop:16,padding:"8px 16px",background:"#ef4444",color:"#fff",border:"none",borderRadius:8,cursor:"pointer"}}>Retry</button></div>:this.props.children;}
+  render(){return this.state.e?<div style={{padding:40,color:"#ef4444",background:"#0a0a1a",minHeight:"100vh",fontFamily:"monospace"}}><h2>âš ï¸ V9 Error</h2><pre style={{whiteSpace:"pre-wrap"}}>{this.state.e.message}</pre><button onClick={()=>this.setState({e:null})} style={{marginTop:16,padding:"8px 16px",background:"#ef4444",color:"#fff",border:"none",borderRadius:8,cursor:"pointer"}}>Retry</button></div>:this.props.children;}
 }
 
-// ── UI Components ──
+// â”€â”€ UI Components â”€â”€
 const Pill = ({children,active,onClick,count}) => <button onClick={onClick} style={{padding:"5px 13px",borderRadius:20,border:active?"none":"1px solid rgba(255,255,255,0.08)",background:active?"linear-gradient(135deg,#6366f1,#8b5cf6)":"rgba(255,255,255,0.03)",color:active?"#fff":"#94a3b8",fontSize:12,fontWeight:active?600:400,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:5,whiteSpace:"nowrap",transition:"all .2s"}}>{children}{count!=null&&<span style={{background:active?"rgba(255,255,255,.2)":"rgba(255,255,255,.06)",padding:"1px 6px",borderRadius:10,fontSize:10}}>{count}</span>}</button>;
 
 const Metric = ({icon,label,value,sub,color,trend}) => <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:14,padding:"14px 16px"}}><div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}><span style={{fontSize:11,color:"#64748b",fontWeight:500}}>{label}</span>{icon&&<span style={{color:color||"#6366f1",opacity:.7}}>{icon}</span>}</div><div style={{fontSize:20,fontWeight:700,color:"#e2e8f0",marginTop:2}}>{value}</div>{sub&&<div style={{fontSize:10,color:trend==="up"?"#34d399":trend==="down"?"#f87171":"#64748b",marginTop:2}}>{sub}</div>}</div>;
@@ -139,12 +155,12 @@ const Panel = ({children,style}) => <div style={{background:"rgba(255,255,255,.0
 
 const FraudBadge = ({score}) => {const c=score>=60?"#ef4444":score>=30?"#f59e0b":"#22c55e";return <span style={{display:"inline-flex",alignItems:"center",gap:3,padding:"2px 7px",borderRadius:8,background:`${c}12`,color:c,fontSize:10,fontWeight:700}}><Shield size={9}/>{score>=60?"HIGH":score>=30?"MED":"LOW"} ({score})</span>;};
 
-const Btn = ({children,onClick,disabled,variant,size,loading,style:sx,...rest}) => <button onClick={onClick} disabled={disabled||loading} style={{padding:size==="sm"?"4px 10px":"6px 14px",borderRadius:8,border:variant==="ghost"?"1px solid rgba(255,255,255,.08)":"none",background:variant==="ghost"?"transparent":variant==="danger"?"rgba(239,68,68,.15)":"linear-gradient(135deg,#6366f1,#8b5cf6)",color:variant==="danger"?"#f87171":variant==="ghost"?"#94a3b8":"#fff",fontSize:size==="sm"?11:12,fontWeight:600,cursor:disabled||loading?"not-allowed":"pointer",opacity:disabled||loading?.5:1,display:"inline-flex",alignItems:"center",gap:4,transition:"all .15s",...sx}}>{loading&&<RefreshCw size={10} style={{animation:"spin 1s linear infinite"}}/>}{children}</button>;
+const Btn = ({children,onClick,disabled,variant,size,loading,...p}) => <button onClick={onClick} disabled={disabled||loading} style={{padding:size==="sm"?"4px 10px":"6px 14px",borderRadius:8,border:variant==="ghost"?"1px solid rgba(255,255,255,.08)":"none",background:variant==="ghost"?"transparent":variant==="danger"?"rgba(239,68,68,.15)":"linear-gradient(135deg,#6366f1,#8b5cf6)",color:variant==="danger"?"#f87171":variant==="ghost"?"#94a3b8":"#fff",fontSize:size==="sm"?11:12,fontWeight:600,cursor:disabled||loading?"not-allowed":"pointer",opacity:disabled||loading?.5:1,display:"inline-flex",alignItems:"center",gap:4,transition:"all .15s",...p.style}} {...p}>{loading&&<RefreshCw size={10} style={{animation:"spin 1s linear infinite"}}/>}{children}</button>;
 
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function V9() {
   const [view, setView] = useState("dashboard");
   const [st, setSt] = useState(null);
@@ -185,125 +201,51 @@ function V9() {
   const [pipeRunning, setPipeRunning] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [cbOnline, setCbOnline] = useState(false);
-  // OpenClaw state
-  const [ocMessages, setOcMessages] = useState([{role:"system",text:"👋 OpenClaw online. I can manage products, orders, pipelines, and customer support. Try: \"show me pending orders\" or \"approve all products with score above 70\""}]);
-  const [ocInput, setOcInput] = useState("");
-  const [ocLoading, setOcLoading] = useState(false);
-  const [ocOverview, setOcOverview] = useState(null);
-  const [ocTickets, setOcTickets] = useState([]);
-  const [ocTab, setOcTab] = useState("chat"); // chat | support | products | quick
-  const [ocSupportDraft, setOcSupportDraft] = useState({email:"",subject:"",message:"",priority:"medium"});
-  const [ocAutoReplyLoading, setOcAutoReplyLoading] = useState(null);
-  const [ocProductEdit, setOcProductEdit] = useState({id:"",instruction:""});
-  const [ocEditLoading, setOcEditLoading] = useState(false);
-  // Store state
-  const [storeProducts, setStoreProducts] = useState([]);
-  const [storeCategories, setStoreCategories] = useState(['all']);
-  const [storeCat, setStoreCat] = useState('all');
-  const [storeSearch, setStoreSearch] = useState('');
-  const [storeSort, setStoreSort] = useState('newest');
-  const [cart, setCart] = useState([]);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [storeView, setStoreView] = useState('browse'); // browse|product|checkout|confirmation|track|support
-  const [selProduct, setSelProduct] = useState(null);
-  const [checkoutForm, setCheckoutForm] = useState({name:'',email:'',phone:'',address:'',city:'',zip:'',country:'AU'});
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [lastOrder, setLastOrder] = useState(null);
-  const [trackInput, setTrackInput] = useState('');
-  const [trackResult, setTrackResult] = useState(null);
-  const [supportForm, setSupportForm] = useState({email:'',subject:'',message:'',orderId:''});
-  const [supportResult, setSupportResult] = useState(null);
-  const [storeLoading, setStoreLoading] = useState(false);
   const autoRef = useRef(null);
   const mgrRef = useRef(null);
 
-  // ── Load ──
+  // â”€â”€ Load â”€â”€
   useEffect(()=>{(async()=>{
     let d = await sto.get(STORAGE_KEY);
     if(!d) d = await sto.get("xeriaco_state_v8");
     if(!d) d = await sto.get("xeriaco_state_v7");
-    if(d){const def=defState();Object.keys(def).forEach(k=>{if(d[k]===undefined)d[k]=def[k];});if(!d.storeManager)d.storeManager=def.storeManager;else{const sm=def.storeManager;Object.keys(sm).forEach(k=>{if(d.storeManager[k]===undefined)d.storeManager[k]=sm[k];});}
-    if(!d.autoDiscoveryMin)d.autoDiscoveryMin=10;
-    setSt(d);}else{const fresh=defState();setSt(fresh);}
+    if(d){const def=defState();Object.keys(def).forEach(k=>{if(d[k]===undefined)d[k]=def[k];});if(!d.storeManager)d.storeManager=def.storeManager;else{const sm=def.storeManager;Object.keys(sm).forEach(k=>{if(d.storeManager[k]===undefined)d.storeManager[k]=sm[k];});}setSt(d);}else setSt(defState());
     const o=await sto.get(ORDERS_KEY);if(o)setOrders(o);
     const a=await sto.get(ANALYTICS_KEY);if(a)setStoreAnalytics(a);
     const s=await sto.get(STORE_KEY);if(s)setStoreData(s);
     setLoading(false);
   })();},[]);
 
-  // ── Save ──
+  // â”€â”€ Save â”€â”€
   useEffect(()=>{if(st&&!loading)sto.set(STORAGE_KEY,st);},[st,loading]);
 
-  // ── Auto Discovery (full pipeline: discover → analyze → list) ──
-  const autoDiscoverFull = useCallback(async(auto=true)=>{
-    if(discovering||autopilotRunning)return;
-    setDiscovering(true);
-    log(auto?"⏰ Auto-discovery (10min cycle)":"🔍 Manual discovery");
-    try {
-      const raw = await aiDiscover(st?.customDiscoveryPrompt,st?.customDiscoveryUser);
-      const found = parseAI(raw);
-      if(!Array.isArray(found)) throw new Error("Bad format");
-      const stamped = found.map(p=>({...p,id:`p_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,discoveredAt:new Date().toISOString(),status:"discovered",notes:""}));
-      setSt(p=>({...p,products:[...stamped,...(p.products||[])],aiCalls:(p.aiCalls||0)+1,aiCostUsd:(p.aiCostUsd||0)+.003,discoveryLog:[{time:new Date().toISOString(),count:stamped.length,auto},...(p.discoveryLog||[]).slice(0,49)]}));
-      log(`✅ Found ${stamped.length} products — auto-analyzing...`,"success");
-      if(st?.discordWebhook) webhook(st.discordWebhook,{content:`🔍 **XeriaCo V9** found ${stamped.length} products:\n${stamped.map(x=>`• ${x.title} — $${x.sellingPrice} (${x.profitMargin}%)`).join("\n")}`});
-      // Auto-analyze each new product
-      for(const p of stamped){
-        try{
-          const a=parseAI(await aiAnalyze(p,st?.customAnalysisPrompt));
-          setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,analysis:a,status:"analyzed"}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));
-          log(`📊 ${p.title}: ${a.overallScore}/100`,"success");
-          // Auto-list if score is decent
-          if(a.overallScore>=40){
-            try{
-              const l=parseAI(await aiListing({...p,analysis:a},a));
-              setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,listing:l,status:"listed"}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));
-              log(`✅ Listed: "${p.title}"`,"success");
-            }catch{}
-          }
-        }catch{}
-      }
-    }catch(e){log(`❌ Discovery failed: ${e.message}`,"error");}
-    setDiscovering(false);
-  },[st?.customDiscoveryPrompt,st?.customDiscoveryUser,st?.customAnalysisPrompt,st?.discordWebhook,discovering,autopilotRunning]);
-
-  // ── Auto-discovery interval (default 10min) ──
+  // â”€â”€ Auto Discovery â”€â”€
   useEffect(()=>{
     if(autoRef.current)clearInterval(autoRef.current);
-    const mins = st?.autoDiscoveryMin||10;
-    if(mins>0&&!discovering)autoRef.current=setInterval(()=>autoDiscoverFull(true),mins*6e4);
+    if(st?.autoDiscoveryMin>0&&!discovering)autoRef.current=setInterval(()=>handleDiscover(true),st.autoDiscoveryMin*6e4);
     return()=>{if(autoRef.current)clearInterval(autoRef.current);};
-  },[st?.autoDiscoveryMin,discovering,autoDiscoverFull]);
+  },[st?.autoDiscoveryMin,discovering]);
 
-  // ── Run discovery on first load (after 5s settle) ──
-  const initialRunRef = useRef(false);
-  useEffect(()=>{
-    if(!loading&&st&&!initialRunRef.current){
-      initialRunRef.current=true;
-      setTimeout(()=>autoDiscoverFull(true),5000);
-    }
-  },[loading,st,autoDiscoverFull]);
-
-  // ── Manager Timer ──
+  // â”€â”€ Manager Timer â”€â”€
   useEffect(()=>{
     if(mgrRef.current)clearInterval(mgrRef.current);
     if(st?.storeManager?.cycleIntervalMin>0&&st?.storeManager?.enabled&&!managerRunning)mgrRef.current=setInterval(()=>handleMgrCycle(),st.storeManager.cycleIntervalMin*6e4);
     return()=>{if(mgrRef.current)clearInterval(mgrRef.current);};
   },[st?.storeManager?.cycleIntervalMin,st?.storeManager?.enabled,managerRunning]);
 
-  // ── Health Checks ──
+  // â”€â”€ Health Checks â”€â”€
   useEffect(()=>{
     const ck=async()=>{setCbOnline(await clawdbotHealth());const h=await api.health();setRwOnline(!!h&&h.status==="ok");};
     ck();const iv=setInterval(ck,6e4);return()=>clearInterval(iv);
   },[]);
 
-  // ── Shared Data Poll ──
+  // â”€â”€ Shared Data Poll â”€â”€
   useEffect(()=>{
     const poll=async()=>{const o=await sto.get(ORDERS_KEY);if(o)setOrders(o);const a=await sto.get(ANALYTICS_KEY);if(a)setStoreAnalytics(a);const s=await sto.get(STORE_KEY);if(s)setStoreData(s);};
     const iv=setInterval(poll,1e4);return()=>clearInterval(iv);
   },[]);
 
-  // ── Auto-fulfill ──
+  // â”€â”€ Auto-fulfill â”€â”€
   useEffect(()=>{
     if(!st?.storeManager?.autoFulfillEnabled||!orders.length)return;
     const pend=orders.filter(o=>o.status==="pending");
@@ -312,7 +254,7 @@ function V9() {
     setOrders(upd);sto.set(ORDERS_KEY,upd);
   },[st?.storeManager?.autoFulfillEnabled,orders.length]);
 
-  // ── Railway Sync ──
+  // â”€â”€ Railway Sync â”€â”€
   const syncRw = useCallback(async()=>{
     setSyncing(true);
     const [d,p,o,pi,f,s] = await Promise.allSettled([api.dashboard(),api.products(100),api.orders(),api.pipeStatus(),api.fraudQ(),api.system()]);
@@ -322,90 +264,95 @@ function V9() {
 
   useEffect(()=>{syncRw();const iv=setInterval(syncRw,3e4);return()=>clearInterval(iv);},[syncRw]);
 
-  // ── Helpers ──
+  // â”€â”€ Helpers â”€â”€
   const log = (msg,type="info") => setSt(p=>({...p,activityLog:[{msg,type,time:new Date().toISOString()},...(p.activityLog||[]).slice(0,99)]}));
   const cpClip = (t,f) => {navigator.clipboard?.writeText(t);setCopiedField(f);setTimeout(()=>setCopiedField(null),2e3);};
-  const parseAI = (raw) => JSON.parse(raw.replace(/```json|```/g,"").trim());
+  const parseAI = (raw) => {
+    if (!raw || typeof raw !== "string") throw new Error("No AI response to parse");
+    let cleaned = raw.replace(/```json|```/g,"").trim();
+    // Try to extract JSON from mixed text
+    const jsonMatch = cleaned.match(/[\[{][\s\S]*[\]}]/);
+    if (jsonMatch) cleaned = jsonMatch[0];
+    try { return JSON.parse(cleaned); } catch(e) { throw new Error(`Failed to parse AI response: ${e.message}\nRaw: ${raw.slice(0,200)}`); }
+  };
 
-  // ═══════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  HANDLERS
-  // ═══════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   const handleDiscover = async (auto=false) => {
     if(discovering)return; setDiscovering(true);
-    log(auto?"⏰ Auto-discovery":"🔍 Manual discovery");
+    log(auto?"â° Auto-discovery":"ðŸ” Manual discovery");
     try {
       const raw = await aiDiscover(st?.customDiscoveryPrompt,st?.customDiscoveryUser);
       const prods = parseAI(raw);
       if(!Array.isArray(prods)) throw new Error("Bad format");
       const stamped = prods.map(p=>({...p,id:`p_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,discoveredAt:new Date().toISOString(),status:"discovered",notes:""}));
       setSt(p=>({...p,products:[...stamped,...(p.products||[])],aiCalls:(p.aiCalls||0)+1,aiCostUsd:(p.aiCostUsd||0)+.003,discoveryLog:[{time:new Date().toISOString(),count:stamped.length,auto},...(p.discoveryLog||[]).slice(0,49)]}));
-      log(`✅ Found ${stamped.length} products`,"success");
-      if(st?.discordWebhook) webhook(st.discordWebhook,{content:`🔍 **XeriaCo V9** found ${stamped.length} products:\n${stamped.map(x=>`• ${x.title} — $${x.sellingPrice} (${x.profitMargin}%)`).join("\n")}`});
-    } catch(e){log(`❌ Discovery failed: ${e.message}`,"error");}
+      log(`âœ… Found ${stamped.length} products`,"success");
+      if(st?.discordWebhook) webhook(st.discordWebhook,{content:`ðŸ” **XeriaCo V9** found ${stamped.length} products:\n${stamped.map(x=>`â€¢ ${x.title} â€” $${x.sellingPrice} (${x.profitMargin}%)`).join("\n")}`});
+    } catch(e){log(`âŒ Discovery failed: ${e.message}`,"error");}
     setDiscovering(false);
   };
 
   const handleAnalyze = async (p) => {
-    setAnalyzingId(p.id);log(`🔬 Analyzing "${p.title}"`);
-    try{const a=parseAI(await aiAnalyze(p,st?.customAnalysisPrompt));setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,analysis:a,status:"analyzed"}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));log(`📊 Score: ${a.overallScore}/100`,"success");}catch(e){log(`❌ ${e.message}`,"error");}
+    setAnalyzingId(p.id);log(`ðŸ”¬ Analyzing "${p.title}"`);
+    try{const a=parseAI(await aiAnalyze(p,st?.customAnalysisPrompt));setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,analysis:a,status:"analyzed"}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));log(`ðŸ“Š Score: ${a.overallScore}/100`,"success");}catch(e){log(`âŒ ${e.message}`,"error");}
     setAnalyzingId(null);
   };
 
   const handleListing = async (p) => {
-    setListingId(p.id);log(`📝 Listing "${p.title}"`);
-    try{const l=parseAI(await aiListing(p,p.analysis));setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,listing:l,status:"listed"}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));log("✅ Listing ready","success");}catch(e){log(`❌ ${e.message}`,"error");}
+    setListingId(p.id);log(`ðŸ“ Listing "${p.title}"`);
+    try{const l=parseAI(await aiListing(p,p.analysis));setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,listing:l,status:"listed"}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));log("âœ… Listing ready","success");}catch(e){log(`âŒ ${e.message}`,"error");}
     setListingId(null);
   };
 
   const handleAutopilot = async () => {
-    if(autopilotRunning)return;setAutopilotRunning(true);log("🚀 Autopilot started");
+    if(autopilotRunning)return;setAutopilotRunning(true);log("ðŸš€ Autopilot started");
     setAutopilotStep("Discovering...");await handleDiscover();
     const newP=st?.products?.filter(x=>x.status==="discovered").slice(0,3)||[];
     for(const p of newP){setAutopilotStep(`Analyzing "${p.title}"...`);await handleAnalyze(p);}
     const anlz=st?.products?.filter(x=>x.status==="analyzed"&&!x.listing).slice(0,3)||[];
     for(const p of anlz){setAutopilotStep(`Listing "${p.title}"...`);await handleListing(p);}
-    setAutopilotStep("");setAutopilotRunning(false);log("🏁 Autopilot done","success");
+    setAutopilotStep("");setAutopilotRunning(false);log("ðŸ Autopilot done","success");
   };
 
-  const handleCompetitor = async(p)=>{setCompetitorCheckId(p.id);try{const d=parseAI(await aiCompetitor(p));setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,competitors:d}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));}catch{}setCompetitorCheckId(null);};
-  const handleSupplier = async(p)=>{setSupplierSearchId(p.id);try{const d=parseAI(await aiSupplier(p));setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,supplierData:d}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));}catch{}setSupplierSearchId(null);};
-  const handleImage = async(p)=>{setImageSearchId(p.id);try{const d=parseAI(await aiImage(p));if(d?.imageUrl)setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,imageUrl:d.imageUrl}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));}catch{}setImageSearchId(null);};
+  const handleCompetitor = async(p)=>{setCompetitorCheckId(p.id);try{const d=parseAI(await aiCompetitor(p));setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,competitors:d}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));}catch(e){log(`❌ Competitor check failed: ${e.message}`,"error");}setCompetitorCheckId(null);};
+  const handleSupplier = async(p)=>{setSupplierSearchId(p.id);try{const d=parseAI(await aiSupplier(p));setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,supplierData:d}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));}catch(e){log(`❌ Supplier search failed: ${e.message}`,"error");}setSupplierSearchId(null);};
+  const handleImage = async(p)=>{setImageSearchId(p.id);try{const d=parseAI(await aiImage(p));if(d?.imageUrl)setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,imageUrl:d.imageUrl}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));}catch(e){log(`❌ Image search failed: ${e.message}`,"error");}setImageSearchId(null);};
 
-  const handleReview = async(p)=>{setReviewingId(p.id);try{const r=parseAI(await aiReview(p));setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,review:r,lastReview:new Date().toISOString()}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));log(`📋 ${p.title}: ${r.verdict}`,"success");}catch{}setReviewingId(null);};
-  const handleReprice = async(p)=>{setRepricingId(p.id);try{const rp=parseAI(await aiReprice(p));if(rp.suggestedPrice&&rp.suggestedPrice!==p.sellingPrice){const nm=p.supplierPrice>0?Math.round(((rp.suggestedPrice-p.supplierPrice)/rp.suggestedPrice)*100):p.profitMargin;if(nm>=(st?.storeManager?.autoRepriceMarginFloor||40)){setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,sellingPrice:rp.suggestedPrice,profitMargin:nm,repriceHistory:[...(pr.repriceHistory||[]),{from:pr.sellingPrice,to:rp.suggestedPrice,time:new Date().toISOString()}]}:pr),storeManager:{...x.storeManager,totalReprices:(x.storeManager.totalReprices||0)+1},aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));log(`💰 ${p.title}: $${p.sellingPrice}→$${rp.suggestedPrice}`,"success");}}}catch{}setRepricingId(null);};
-  const handleKill = (p)=>{setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,status:"killed"}:pr),storeManager:{...x.storeManager,totalKills:(x.storeManager.totalKills||0)+1}}));log(`💀 Killed "${p.title}"`,"error");};
+  const handleReview = async(p)=>{setReviewingId(p.id);try{const r=parseAI(await aiReview(p));setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,review:r,lastReview:new Date().toISOString()}:pr),aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));log(`ðŸ“‹ ${p.title}: ${r.verdict}`,"success");}catch(e){log(`❌ Review failed: ${e.message}`,"error");}setReviewingId(null);};
+  const handleReprice = async(p)=>{setRepricingId(p.id);try{const rp=parseAI(await aiReprice(p));if(rp.suggestedPrice&&rp.suggestedPrice!==p.sellingPrice){const nm=p.supplierPrice>0?Math.round(((rp.suggestedPrice-p.supplierPrice)/rp.suggestedPrice)*100):p.profitMargin;if(nm>=(st?.storeManager?.autoRepriceMarginFloor||40)){setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,sellingPrice:rp.suggestedPrice,profitMargin:nm,repriceHistory:[...(pr.repriceHistory||[]),{from:pr.sellingPrice,to:rp.suggestedPrice,time:new Date().toISOString()}]}:pr),storeManager:{...x.storeManager,totalReprices:(x.storeManager.totalReprices||0)+1},aiCalls:(x.aiCalls||0)+1,aiCostUsd:(x.aiCostUsd||0)+.003}));log(`ðŸ’° ${p.title}: $${p.sellingPrice}â†’$${rp.suggestedPrice}`,"success");}}}catch(e){log(`❌ Reprice failed: ${e.message}`,"error");}setRepricingId(null);};
+  const handleKill = (p)=>{setSt(x=>({...x,products:x.products.map(pr=>pr.id===p.id?{...pr,status:"killed"}:pr),storeManager:{...x.storeManager,totalKills:(x.storeManager.totalKills||0)+1}}));log(`ðŸ’€ Killed "${p.title}"`,"error");};
 
   const handleMgrCycle = async()=>{
-    if(managerRunning)return;
-    if(!st?.storeManager?.enabled)setSt(p=>({...p,storeManager:{...p.storeManager,enabled:true}}));
-    setManagerRunning(true);log("🤖 Manager cycle");
+    if(managerRunning||!st?.storeManager?.enabled)return;setManagerRunning(true);log("ðŸ¤– Manager cycle");
     for(const p of (st?.products||[]).filter(x=>x.status==="listed"||x.status==="analyzed")){setManagerStep(`Reviewing "${p.title}"...`);await handleReview(p);}
     if(st?.storeManager?.autoRepriceEnabled)for(const p of (st?.products||[]).filter(x=>x.review?.verdict==="reprice")){setManagerStep(`Repricing "${p.title}"...`);await handleReprice(p);}
-    setManagerStep("");setManagerRunning(false);setSt(p=>({...p,storeManager:{...p.storeManager,lastCycleTime:new Date().toISOString()}}));log("✅ Cycle done","success");
+    setManagerStep("");setManagerRunning(false);setSt(p=>({...p,storeManager:{...p.storeManager,lastCycleTime:new Date().toISOString()}}));log("âœ… Cycle done","success");
   };
 
   // Railway handlers
-  const rwRunPipe = async(t="full")=>{setPipeRunning(true);log(`🚂 Railway ${t} pipeline`);const r=await api.runPipe(t);if(r?.runId)log(`✅ Started: ${r.runId}`,"success");else log("❌ Failed","error");setTimeout(()=>{syncRw();setPipeRunning(false);},3e3);};
-  const rwTrend = async()=>{log("🔎 TrendScout...");await api.runTrend();syncRw();};
-  const rwSupplier = async()=>{log("📦 SupplierSource...");await api.runSupplier(20);syncRw();};
-  const rwEnrich = async()=>{log("🧠 AI Enrich...");await api.runEnrich(10);syncRw();};
-  const rwApprove = async(id)=>{const r=await api.approve(id);if(r?.approved)log(`✅ Approved: ${r.title}`,"success");syncRw();};
-  const rwReject = async(id)=>{const r=await api.reject(id,"V9 Dashboard");if(r?.rejected)log(`❌ Rejected: ${r.title}`);syncRw();};
-  const rwFraud = async(id,action)=>{const r=await api.reviewFraud(id,action);if(r?.reviewed)log(`🛡️ ${action}: ${r.orderId}`,"success");syncRw();};
-  const rwMarketplace = async(id,ch)=>{log(`📤 Push to ${ch}...`);await api.marketplace(id,ch);syncRw();};
+  const rwRunPipe = async(t="full")=>{setPipeRunning(true);log(`ðŸš‚ Railway ${t} pipeline`);const r=await api.runPipe(t);if(r?.runId)log(`âœ… Started: ${r.runId}`,"success");else log("âŒ Failed","error");setTimeout(()=>{syncRw();setPipeRunning(false);},3e3);};
+  const rwTrend = async()=>{log("ðŸ”Ž TrendScout...");await api.runTrend();syncRw();};
+  const rwSupplier = async()=>{log("ðŸ“¦ SupplierSource...");await api.runSupplier(20);syncRw();};
+  const rwEnrich = async()=>{log("ðŸ§  AI Enrich...");await api.runEnrich(10);syncRw();};
+  const rwApprove = async(id)=>{const r=await api.approve(id);if(r?.approved)log(`âœ… Approved: ${r.title}`,"success");syncRw();};
+  const rwReject = async(id)=>{const r=await api.reject(id,"V9 Dashboard");if(r?.rejected)log(`âŒ Rejected: ${r.title}`);syncRw();};
+  const rwFraud = async(id,action)=>{const r=await api.reviewFraud(id,action);if(r?.reviewed)log(`ðŸ›¡ï¸ ${action}: ${r.orderId}`,"success");syncRw();};
+  const rwMarketplace = async(id,ch)=>{log(`ðŸ“¤ Push to ${ch}...`);await api.marketplace(id,ch);syncRw();};
 
   const handleFulfill = async(id)=>{
     setFulfillingId(id);
     const lo=orders.find(o=>o.id===id);
-    if(lo){const ni=ORDER_STATUSES.indexOf(lo.status)+1;if(ni<ORDER_STATUSES.length){const upd=orders.map(o=>o.id===id?{...o,status:ORDER_STATUSES[ni],statusHistory:[...(o.statusHistory||[]),{status:ORDER_STATUSES[ni],time:new Date().toISOString()}]}:o);setOrders(upd);sto.set(ORDERS_KEY,upd);log(`📦 ${STATUS_LABELS[ORDER_STATUSES[ni]]}`,"success");}}
+    if(lo){const ni=ORDER_STATUSES.indexOf(lo.status)+1;if(ni<ORDER_STATUSES.length){const upd=orders.map(o=>o.id===id?{...o,status:ORDER_STATUSES[ni],statusHistory:[...(o.statusHistory||[]),{status:ORDER_STATUSES[ni],time:new Date().toISOString()}]}:o);setOrders(upd);sto.set(ORDERS_KEY,upd);log(`ðŸ“¦ ${STATUS_LABELS[ORDER_STATUSES[ni]]}`,"success");}}
     setFulfillingId(null);
   };
 
   const handleInvSync = async()=>{
-    setInventorySyncing(true);log("📊 Inventory sync...");
-    for(const p of (st?.products||[]).filter(x=>x.status==="listed").slice(0,5)){try{const d=parseAI(await aiInventory(p));setInventoryResults(prev=>({...prev,[p.id]:d}));}catch{}}
-    setInventorySyncing(false);log("✅ Sync done","success");
+    setInventorySyncing(true);log("ðŸ“Š Inventory sync...");
+    for(const p of (st?.products||[]).filter(x=>x.status==="listed").slice(0,5)){try{const d=parseAI(await aiInventory(p));setInventoryResults(prev=>({...prev,[p.id]:d}));}catch(e){log(`❌ Inv check failed: ${e.message}`,"error");}}
+    setInventorySyncing(false);log("âœ… Sync done","success");
   };
 
   // Computed
@@ -413,10 +360,10 @@ function V9() {
   const byS = s => prods.filter(p=>p.status===s).length;
   const analyzed = prods.filter(p=>p.analysis);
   const avgScore = analyzed.length ? Math.round(analyzed.reduce((s,p)=>s+(p.analysis.overallScore||0),0)/analyzed.length) : 0;
-  const totalRev = (storeData?.totalRevenue||0) + (rwDash?.orders?.todaysRevenue ? parseFloat(String(rwDash.orders.todaysRevenue).replace("$",""))||0 : 0);
+  const totalRev = (storeData?.totalRevenue||0) + (rwDash?.orders?.todaysRevenue ? parseFloat(rwDash.orders.todaysRevenue.replace("$","")) : 0);
   const totalOrds = orders.length + rwOrds.length;
 
-  // ── Additional UI State ──
+  // â”€â”€ Additional UI State â”€â”€
   const [showSettings, setShowSettings] = useState(false);
   const [showPromptEditor, setShowPromptEditor] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -425,44 +372,14 @@ function V9() {
   const [rwAnalytics, setRwAnalytics] = useState(null);
   const [analyticsDays, setAnalyticsDays] = useState(30);
   const [showExport, setShowExport] = useState(false);
-  const [sourceFilter, setSourceFilter] = useState("all");
   const pendingOrders = orders.filter(o=>o.status==="pending"||o.status==="processing").length;
   const listedProds = prods.filter(p=>p.status==="listed");
   const rwFraudCount = fraudQ.length;
 
-  // ── Normalize Railway products into unified shape ──
-  const rwProdsNorm = rwProds.map(p=>({
-    id: p._id,
-    _rwId: p._id,
-    _source: "railway",
-    title: p.title,
-    supplierPrice: p.costUsd||0,
-    sellingPrice: p.sellingPriceAud||0,
-    profitMargin: p.profitMarginPercent||0,
-    category: p.category||"",
-    sourcePlatform: p.supplier?.platform||"Railway",
-    status: p.pipeline?.approved?"approved":p.pipeline?.rejectionReason?"rejected":"draft",
-    imageUrl: p.featuredImage||p.images?.[0]?.url||"",
-    discoveredAt: p.pipeline?.discoveredAt||p.createdAt,
-    description: p.description||"",
-    tags: p.tags||[],
-    analysis: p.pipeline?.researchScore?{overallScore:p.pipeline.researchScore,trendScore:p.pipeline.trendScore||0}:null,
-    listing: p.aiContent?.title?{shopifyTitle:p.aiContent.title,shopifyDescription:p.aiContent.description,seoTitle:p.aiContent.seoTitle,seoDescription:p.aiContent.seoDescription}:null,
-    supplier: p.supplier,
-    competitionLevel: p.pipeline?.competitorCount>5?"High":p.pipeline?.competitorCount>2?"Medium":"Low",
-    comparePriceAud: p.comparePriceAud,
-    shopifyStatus: p.shopifyStatus,
-    isActive: p.isActive,
-  }));
-
-  const allProds = sourceFilter==="ai"?prods.map(p=>({...p,_source:"ai"})):sourceFilter==="railway"?rwProdsNorm:[ ...prods.map(p=>({...p,_source:"ai"})), ...rwProdsNorm ];
-  const allProdsFiltered = allProds.filter(p=>statusFilter==="all"||p.status===statusFilter);
-  const totalProductCount = prods.length + rwProds.length;
-
-  // ── Fetch Railway Analytics ──
+  // â”€â”€ Fetch Railway Analytics â”€â”€
   useEffect(()=>{(async()=>{const d=await api.analytics(analyticsDays);if(d)setRwAnalytics(d);})();},[analyticsDays]);
 
-  // ── Export ──
+  // â”€â”€ Export â”€â”€
   const exportCSV = () => {
     const rows = [["Title","Status","Supplier$","Sell$","Margin%","Score","Category","Source","Discovered"]];
     prods.forEach(p => rows.push([p.title,p.status,p.supplierPrice,p.sellingPrice,p.profitMargin,p.analysis?.overallScore||"",p.category,p.sourcePlatform,p.discoveredAt]));
@@ -477,7 +394,7 @@ function V9() {
     const a = document.createElement("a");a.href=u;a.download="xeriaco-v9-data.json";a.click();
   };
 
-  // ── NavBtn ──
+  // â”€â”€ NavBtn â”€â”€
   const NavBtn = ({icon:I,label,active,onClick,badge}) => (
     <button onClick={onClick} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 14px",borderRadius:8,border:"none",background:active?"rgba(99,102,241,.12)":"transparent",color:active?"#818cf8":"#71717a",fontSize:13,fontWeight:active?600:400,cursor:"pointer",width:"100%",textAlign:"left",transition:"all .15s"}}>
       <I size={16}/>{label}
@@ -485,199 +402,21 @@ function V9() {
     </button>
   );
 
-  // ── Score Ring ──
+  // â”€â”€ Score Ring â”€â”€
   const ScoreRing = ({score,size=44}) => {
     const r=size/2-3,c=2*Math.PI*r,co=score>=80?"#22c55e":score>=60?"#f59e0b":"#ef4444";
     return <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}><circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,.06)" strokeWidth={3}/><circle cx={size/2} cy={size/2} r={r} fill="none" stroke={co} strokeWidth={3} strokeDasharray={c} strokeDashoffset={c-(score/100)*c} strokeLinecap="round" className="score-ring"/><text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="central" fill="#e2e8f0" fontSize={size/3.5} fontWeight={700} style={{transform:"rotate(90deg)",transformOrigin:"center"}}>{score}</text></svg>;
   };
 
-  // ═══ OPENCLAW HANDLERS ═══
-  const ocSend = async (msg) => {
-    if (!msg?.trim()) return;
-    const userMsg = { role: "user", text: msg, time: new Date().toISOString() };
-    setOcMessages(p => [...p, userMsg]);
-    setOcInput("");
-    setOcLoading(true);
-    try {
-      const context = { products: prods.length, orders: orders.length, rwProducts: rwProds.length };
-      const r = await api.ocCommand(msg, context);
-      if (r) {
-        const parts = [];
-        if (r.summary) parts.push(r.summary);
-        if (r.results?.length) {
-          for (const res of r.results) {
-            if (res.success) {
-              parts.push(`✅ ${res.action}: ${JSON.stringify(res.data).slice(0,200)}`);
-            } else {
-              parts.push(`❌ ${res.action}: ${res.error}`);
-            }
-          }
-        }
-        if (r.clarification) parts.push(`❓ ${r.clarification}`);
-        if (r.raw) parts.push(r.summary || "Response received");
-        setOcMessages(p => [...p, { role: "assistant", text: parts.join("\n\n") || "Done", time: new Date().toISOString(), results: r.results }]);
-        // Refresh data after actions
-        if (r.actionsExecuted > 0) syncRw();
-      } else {
-        setOcMessages(p => [...p, { role: "assistant", text: "⚠️ No response from backend. Check Railway connection.", time: new Date().toISOString() }]);
-      }
-    } catch (err) {
-      setOcMessages(p => [...p, { role: "assistant", text: `❌ Error: ${err.message}`, time: new Date().toISOString() }]);
-    }
-    setOcLoading(false);
-  };
-
-  const ocQuickAction = async (action) => {
-    setOcLoading(true);
-    try {
-      const r = await api.ocQuick(action);
-      if (r?.success) {
-        setOcMessages(p => [...p, { role: "system", text: `✅ ${action.action}: ${JSON.stringify(r.data).slice(0,300)}`, time: new Date().toISOString() }]);
-        syncRw();
-      }
-    } catch {}
-    setOcLoading(false);
-  };
-
-  const ocFetchOverview = async () => {
-    const r = await api.ocOverview();
-    if (r) setOcOverview(r);
-  };
-
-  const ocFetchTickets = async () => {
-    const r = await api.ocQuick({ action: "list_support_tickets", filters: {} });
-    if (r?.success) setOcTickets(r.data?.supportTickets || []);
-  };
-
-  const ocCreateTicket = async () => {
-    const r = await api.ocQuick({ action: "create_ticket", ...ocSupportDraft });
-    if (r?.success) {
-      setOcMessages(p => [...p, { role: "system", text: `🎫 Ticket created for ${ocSupportDraft.email}`, time: new Date().toISOString() }]);
-      setOcSupportDraft({ email: "", subject: "", message: "", priority: "medium" });
-      ocFetchTickets();
-    }
-  };
-
-  const ocAutoReply = async (ticketId) => {
-    setOcAutoReplyLoading(ticketId);
-    const r = await api.ocQuick({ action: "auto_respond", ticketId });
-    if (r?.success && r.data?.autoResponse) {
-      setOcMessages(p => [...p, { role: "assistant", text: `💬 Auto-reply generated:\n\n${r.data.autoResponse}`, time: new Date().toISOString() }]);
-    }
-    setOcAutoReplyLoading(null);
-  };
-
-  const ocAiEditProduct = async () => {
-    if (!ocProductEdit.id || !ocProductEdit.instruction) return;
-    setOcEditLoading(true);
-    const r = await api.ocAiEdit(ocProductEdit.id, ocProductEdit.instruction);
-    if (r?.success) {
-      setOcMessages(p => [...p, { role: "assistant", text: `✏️ Updated "${r.title}" — changed: ${r.changes?.join(", ")}`, time: new Date().toISOString() }]);
-      setOcProductEdit({ id: "", instruction: "" });
-      syncRw();
-    }
-    setOcEditLoading(false);
-  };
-
-  // ═══ STORE FUNCTIONS ═══
-  const fetchStoreProducts = async () => {
-    setStoreLoading(true);
-    try {
-      const params = new URLSearchParams({ sort: storeSort, limit: '50' });
-      if (storeCat !== 'all') params.set('category', storeCat);
-      if (storeSearch) params.set('search', storeSearch);
-      const r = await fetch(`${RAILWAY}/api/store/products?${params}`);
-      if (r.ok) {
-        const d = await r.json();
-        setStoreProducts(d.products || []);
-        setStoreCategories(d.categories || ['all']);
-      }
-    } catch {}
-    setStoreLoading(false);
-  };
-
-  const addToCart = (product, qty = 1) => {
-    setCart(prev => {
-      const existing = prev.find(i => i.id === product.id);
-      if (existing) return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + qty } : i);
-      return [...prev, { ...product, quantity: qty }];
-    });
-    setCartOpen(true);
-  };
-
-  const removeFromCart = (id) => setCart(prev => prev.filter(i => i.id !== id));
-  const updateCartQty = (id, qty) => {
-    if (qty <= 0) return removeFromCart(id);
-    setCart(prev => prev.map(i => i.id === id ? { ...i, quantity: qty } : i));
-  };
-
-  const cartTotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
-  const cartShipping = cartTotal >= 100 ? 0 : 9.95;
-  const cartTax = Math.round(cartTotal * 0.1 * 100) / 100;
-  const cartGrand = Math.round((cartTotal + cartShipping + cartTax) * 100) / 100;
-
-  const placeOrder = async () => {
-    if (!checkoutForm.name || !checkoutForm.email || !checkoutForm.address) return;
-    setCheckoutLoading(true);
-    try {
-      const r = await fetch(`${RAILWAY}/api/store/orders`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: cart.map(i => ({ productId: i.id, quantity: i.quantity })),
-          customer: { name: checkoutForm.name, email: checkoutForm.email, phone: checkoutForm.phone },
-          shippingAddress: { address: checkoutForm.address, city: checkoutForm.city, zip: checkoutForm.zip, country: checkoutForm.country },
-        }),
-      });
-      if (r.ok) {
-        const d = await r.json();
-        setLastOrder(d);
-        setCart([]);
-        setStoreView('confirmation');
-        log(`🛒 Order ${d.orderId}: $${d.order?.total}`, 'success');
-        syncRw();
-      }
-    } catch (err) { log(`❌ Order failed: ${err.message}`, 'error'); }
-    setCheckoutLoading(false);
-  };
-
-  const trackOrder = async () => {
-    if (!trackInput) return;
-    try {
-      const r = await fetch(`${RAILWAY}/api/store/orders/${trackInput}`);
-      if (r.ok) setTrackResult(await r.json());
-      else setTrackResult({ error: 'Order not found' });
-    } catch { setTrackResult({ error: 'Failed to track order' }); }
-  };
-
-  const submitSupport = async () => {
-    if (!supportForm.email || !supportForm.message) return;
-    try {
-      const r = await fetch(`${RAILWAY}/api/store/support`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(supportForm),
-      });
-      if (r.ok) {
-        const d = await r.json();
-        setSupportResult(d);
-        setSupportForm({ email: '', subject: '', message: '', orderId: '' });
-      }
-    } catch {}
-  };
-
-  // Fetch store products when store tab is active
-  useEffect(() => { if (view === 'store') fetchStoreProducts(); }, [view, storeCat, storeSort]);
-
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "store", label: "Storefront", icon: Store, badge: cart.length || undefined },
     { id: "discovery", label: "Discovery", icon: Search },
-    { id: "products", label: "Products", icon: Package, badge: totalProductCount },
+    { id: "products", label: "Products", icon: Package, badge: prods.length },
     { id: "manager", label: "Store Mgr", icon: Shield, badge: prods.filter(p=>p.review?.verdict==="kill"||p.review?.verdict==="reprice").length || undefined },
     { id: "operations", label: "Operations", icon: ShoppingCart, badge: pendingOrders || undefined },
     { id: "railway", label: "Railway", icon: Server, badge: rwFraudCount || undefined },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
     { id: "activity", label: "Activity", icon: Activity },
-    { id: "openclaw", label: "OpenClaw", icon: Brain, badge: ocTickets.filter(t=>t.status==="open").length || undefined },
   ];
   const nav = (v) => { setView(v); setMobileMenu(false); };
 
@@ -757,18 +496,18 @@ function V9() {
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             {syncing&&<RefreshCw size={14} style={{color:"#6366f1",animation:"spin 1s linear infinite"}}/>}
             <Btn size="sm" variant="ghost" onClick={syncRw}><RefreshCw size={12}/> Sync</Btn>
-            <div style={{fontSize:10,color:"#64748b"}}>AI: {st.aiCalls||0} calls · ${(st.aiCostUsd||0).toFixed(3)}</div>
+            <div style={{fontSize:10,color:"#64748b"}}>AI: {st.aiCalls||0} calls Â· ${(st.aiCostUsd||0).toFixed(3)}</div>
           </div>
         </header>
 
         <div style={{padding:"20px",maxWidth:1400,margin:"0 auto"}}>
-          {/* ═══ DASHBOARD ═══ */}
+          {/* â•â•â• DASHBOARD â•â•â• */}
           {view === "dashboard" && (
             <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
               {/* Hero Metrics */}
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12}}>
                 <Metric icon={<DollarSign size={16}/>} label="Total Revenue" value={`$${totalRev.toFixed(2)}`} color="#22c55e" sub={`${totalOrds} orders`}/>
-                <Metric icon={<Package size={16}/>} label="Total Products" value={totalProductCount} color="#6366f1" sub={`${prods.length} AI · ${rwProds.length} Railway`}/>
+                <Metric icon={<Package size={16}/>} label="AI Products" value={prods.length} color="#6366f1" sub={`${byS("listed")} listed Â· ${byS("analyzed")} analyzed`}/>
                 <Metric icon={<Database size={16}/>} label="Railway Products" value={rwProds.length} color="#8b5cf6" sub={rwDash?.products?.awaitingApproval?`${rwDash.products.awaitingApproval} pending`:"Synced"}/>
                 <Metric icon={<ShoppingCart size={16}/>} label="Total Orders" value={totalOrds} color="#f59e0b" sub={`${pendingOrders} pending`}/>
                 <Metric icon={<Target size={16}/>} label="Avg Score" value={avgScore?`${avgScore}/100`:"-"} color={avgScore>=70?"#22c55e":"#f59e0b"} sub={`${analyzed.length} analyzed`}/>
@@ -779,7 +518,7 @@ function V9() {
               <Panel>
                 <Hdr icon={<Zap size={16}/>} title="Quick Actions"/>
                 <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                  <Btn onClick={()=>autoDiscoverFull(false)} loading={discovering}><Search size={13}/> AI Discover</Btn>
+                  <Btn onClick={()=>handleDiscover()} loading={discovering}><Search size={13}/> AI Discover</Btn>
                   <Btn onClick={handleAutopilot} loading={autopilotRunning}><Rocket size={13}/> Autopilot</Btn>
                   <Btn onClick={handleMgrCycle} loading={managerRunning}><Shield size={13}/> Run Manager</Btn>
                   <Btn onClick={()=>rwRunPipe("full")} loading={pipeRunning} variant="ghost"><Server size={13}/> Railway Pipeline</Btn>
@@ -788,26 +527,6 @@ function V9() {
                 </div>
                 {autopilotStep&&<div style={{marginTop:8,fontSize:11,color:"#a5b4fc"}}>{autopilotStep}</div>}
                 {managerStep&&<div style={{marginTop:4,fontSize:11,color:"#fbbf24"}}>{managerStep}</div>}
-              </Panel>
-
-              {/* Auto-Discovery Status */}
-              <Panel style={{background:"rgba(99,102,241,.04)",borderColor:"rgba(99,102,241,.12)"}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:10}}>
-                    <div style={{width:10,height:10,borderRadius:"50%",background:discovering?"#f59e0b":"#22c55e",boxShadow:discovering?"0 0 8px rgba(245,158,11,.5)":"0 0 8px rgba(34,197,94,.4)",animation:discovering?"spin 2s linear infinite":"none"}}/>
-                    <div>
-                      <div style={{fontSize:13,fontWeight:600,color:"#e2e8f0"}}>{discovering?"🔍 Discovering & analyzing products...":"✅ Auto-Discovery Active"}</div>
-                      <div style={{fontSize:10,color:"#64748b"}}>{discovering?"AI is searching, analyzing, and listing new products":"Runs every "+( st.autoDiscoveryMin||10)+" min · finds → analyzes → lists automatically"}{st.discoveryLog?.[0]&&!discovering?` · Last run: ${new Date(st.discoveryLog[0].time).toLocaleTimeString()}`:""}</div>
-                    </div>
-                  </div>
-                  <div style={{display:"flex",alignItems:"center",gap:6}}>
-                    <Btn size="sm" onClick={()=>autoDiscoverFull(false)} loading={discovering}><Search size={11}/> Run Now</Btn>
-                    <div style={{display:"flex",alignItems:"center",gap:4}}>
-                      <input type="number" min={1} max={720} value={st.autoDiscoveryMin||10} onChange={e=>setSt(p=>({...p,autoDiscoveryMin:parseInt(e.target.value)||10}))} style={{width:45,textAlign:"center",fontSize:11}}/>
-                      <span style={{fontSize:10,color:"#64748b"}}>min</span>
-                    </div>
-                  </div>
-                </div>
               </Panel>
 
               {/* Two columns */}
@@ -819,7 +538,7 @@ function V9() {
                     <div key={p.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,.04)"}}>
                       <div>
                         <div style={{fontSize:12,fontWeight:600,color:"#e2e8f0"}}>{p.title?.substring(0,40)}</div>
-                        <div style={{fontSize:10,color:"#64748b"}}>${p.sellingPrice} · {p.profitMargin}% margin</div>
+                        <div style={{fontSize:10,color:"#64748b"}}>${p.sellingPrice} Â· {p.profitMargin}% margin</div>
                       </div>
                       <Badge status={p.status}/>
                     </div>
@@ -866,22 +585,17 @@ function V9() {
             </div>
           )}
 
-          {/* ═══ DISCOVERY ═══ */}
+          {/* â•â•â• DISCOVERY â•â•â• */}
           {view === "discovery" && (
             <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
               <Panel>
                 <Hdr icon={<Search size={16}/>} title="AI Product Discovery"/>
                 <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:12}}>
-                  <Btn onClick={()=>autoDiscoverFull(false)} loading={discovering}><Sparkles size={13}/> Discover Products</Btn>
+                  <Btn onClick={()=>handleDiscover()} loading={discovering}><Sparkles size={13}/> Discover Products</Btn>
                   <Btn onClick={handleAutopilot} loading={autopilotRunning} variant="ghost"><Rocket size={13}/> Full Autopilot</Btn>
                   {rwOnline&&<Btn onClick={()=>rwRunPipe("trendscout")} loading={pipeRunning} variant="ghost"><Globe size={13}/> Railway TrendScout</Btn>}
                 </div>
                 {autopilotStep&&<div style={{padding:"8px 12px",background:"rgba(99,102,241,.08)",borderRadius:8,fontSize:12,color:"#a5b4fc"}}><Rocket size={12} style={{display:"inline",marginRight:6}}/>{autopilotStep}</div>}
-                {discovering&&<div style={{padding:"8px 12px",background:"rgba(245,158,11,.08)",borderRadius:8,fontSize:12,color:"#fbbf24",display:"flex",alignItems:"center",gap:8}}><RefreshCw size={12} style={{animation:"spin 1s linear infinite"}}/>Discovering, analyzing & listing — products will appear automatically</div>}
-                <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"rgba(34,197,94,.05)",borderRadius:8,border:"1px solid rgba(34,197,94,.1)"}}>
-                  <span style={{width:6,height:6,borderRadius:"50%",background:"#22c55e"}}/>
-                  <span style={{fontSize:11,color:"#64748b"}}>Auto-discovery: every {st.autoDiscoveryMin||10} min · {st.discoveryLog?.[0]?`Last: ${new Date(st.discoveryLog[0].time).toLocaleTimeString()}`:"Waiting for first run..."}</span>
-                </div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8,marginTop:8}}>
                   <Metric label="Discovered" value={byS("discovered")} color="#f59e0b"/>
                   <Metric label="Analyzed" value={byS("analyzed")} color="#3b82f6"/>
@@ -903,12 +617,12 @@ function V9() {
                         </div>
                         <div style={{fontSize:14,fontWeight:700,color:"#e2e8f0"}}>{p.title}</div>
                         <div style={{display:"flex",gap:12,marginTop:4,fontSize:11,color:"#94a3b8"}}>
-                          <span>💰 ${p.supplierPrice} → ${p.sellingPrice}</span>
-                          <span style={{color:p.profitMargin>=60?"#22c55e":"#f59e0b"}}>📊 {p.profitMargin}%</span>
-                          <span>📦 {p.category}</span>
-                          {p.estimatedMonthlySales&&<span>📈 ~{p.estimatedMonthlySales}/mo</span>}
+                          <span>ðŸ’° ${p.supplierPrice} â†’ ${p.sellingPrice}</span>
+                          <span style={{color:p.profitMargin>=60?"#22c55e":"#f59e0b"}}>ðŸ“Š {p.profitMargin}%</span>
+                          <span>ðŸ“¦ {p.category}</span>
+                          {p.estimatedMonthlySales&&<span>ðŸ“ˆ ~{p.estimatedMonthlySales}/mo</span>}
                         </div>
-                        {p.trendReason&&<div style={{fontSize:10,color:"#64748b",marginTop:4}}>🔥 {p.trendReason}</div>}
+                        {p.trendReason&&<div style={{fontSize:10,color:"#64748b",marginTop:4}}>ðŸ”¥ {p.trendReason}</div>}
                       </div>
                       <div style={{display:"flex",gap:6,flexShrink:0}}>
                         <Btn size="sm" onClick={()=>handleAnalyze(p)} loading={analyzingId===p.id}><Brain size={11}/> Analyze</Btn>
@@ -929,7 +643,7 @@ function V9() {
                         <ScoreRing score={p.analysis?.overallScore||0} size={36}/>
                         <div>
                           <div style={{fontSize:13,fontWeight:600,color:"#e2e8f0"}}>{p.title}</div>
-                          <div style={{fontSize:10,color:"#64748b"}}>${p.sellingPrice} · {p.profitMargin}% · {p.analysis?.reasoning?.substring(0,60)}...</div>
+                          <div style={{fontSize:10,color:"#64748b"}}>${p.sellingPrice} Â· {p.profitMargin}% Â· {p.analysis?.reasoning?.substring(0,60)}...</div>
                         </div>
                       </div>
                       <div style={{display:"flex",gap:6}}>
@@ -947,30 +661,23 @@ function V9() {
                 <Panel>
                   <Hdr icon={<Clock size={16}/>} title="Discovery History"/>
                   {(st.discoveryLog||[]).slice(0,5).map((l,i)=>(
-                    <div key={i} style={{fontSize:11,color:"#64748b",padding:"4px 0"}}>{l.auto?"⏰":"🔍"} {l.count} products · {new Date(l.time).toLocaleString()}</div>
+                    <div key={i} style={{fontSize:11,color:"#64748b",padding:"4px 0"}}>{l.auto?"â°":"ðŸ”"} {l.count} products Â· {new Date(l.time).toLocaleString()}</div>
                   ))}
                 </Panel>
               )}
             </div>
           )}
 
-          {/* ═══ PRODUCTS ═══ */}
+          {/* â•â•â• PRODUCTS â•â•â• */}
           {view === "products" && (
             <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
-              {/* Source Filter */}
               <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-                <span style={{fontSize:11,color:"#64748b"}}>Source:</span>
-                <Pill active={sourceFilter==="all"} onClick={()=>setSourceFilter("all")} count={prods.length+rwProds.length}>All</Pill>
-                <Pill active={sourceFilter==="ai"} onClick={()=>setSourceFilter("ai")} count={prods.length}>AI Discovery</Pill>
-                <Pill active={sourceFilter==="railway"} onClick={()=>setSourceFilter("railway")} count={rwProds.length}>Railway DB</Pill>
-                <span style={{width:1,height:20,background:"#27272a",margin:"0 4px"}}/>
-                <span style={{fontSize:11,color:"#64748b"}}>Status:</span>
-                <Pill active={statusFilter==="all"} onClick={()=>setStatusFilter("all")} count={allProds.length}>All</Pill>
-                {["discovered","analyzed","listed","draft","approved","rejected","killed"].map(s=>{const c=allProds.filter(p=>p.status===s).length;return c>0?<Pill key={s} active={statusFilter===s} onClick={()=>setStatusFilter(s)} count={c}>{s.charAt(0).toUpperCase()+s.slice(1)}</Pill>:null;})}
+                <Pill active={statusFilter==="all"} onClick={()=>setStatusFilter("all")} count={prods.length}>All</Pill>
+                {["discovered","analyzed","listed","killed"].map(s=><Pill key={s} active={statusFilter===s} onClick={()=>setStatusFilter(s)} count={byS(s)}>{s.charAt(0).toUpperCase()+s.slice(1)}</Pill>)}
               </div>
 
               <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                {allProdsFiltered.map(p=>(
+                {prods.filter(p=>statusFilter==="all"||p.status===statusFilter).map(p=>(
                   <Panel key={p.id}>
                     <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
                       {/* Image */}
@@ -978,63 +685,36 @@ function V9() {
                       <div style={{flex:1}}>
                         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
                           <Badge status={p.status}/>
-                          <span style={{fontSize:9,padding:"2px 6px",borderRadius:8,background:p._source==="railway"?"rgba(139,92,246,.1)":"rgba(99,102,241,.1)",color:p._source==="railway"?"#a78bfa":"#818cf8",fontWeight:600}}>{p._source==="railway"?"🚂 Railway":"🤖 AI"}</span>
-                          <span style={{fontSize:10,color:"#64748b"}}>{p.sourcePlatform} · {p.category}</span>
+                          <span style={{fontSize:10,color:"#64748b"}}>{p.sourcePlatform} Â· {p.category}</span>
                           {p.review?.verdict&&<Badge status={p.review.verdict}/>}
                         </div>
                         <div style={{fontSize:14,fontWeight:700,color:"#e2e8f0",cursor:"pointer"}} onClick={()=>setExpandedId(expandedId===p.id?null:p.id)}>{p.title} <ChevronDown size={12} style={{display:"inline",opacity:.4}}/></div>
-                        <div style={{display:"flex",gap:12,marginTop:4,fontSize:11,color:"#94a3b8",flexWrap:"wrap"}}>
-                          {p._source==="railway"?(
-                            <>
-                              <span>💰 US${p.supplierPrice.toFixed(2)} → A${p.sellingPrice.toFixed(2)}</span>
-                              <span style={{color:p.profitMargin>=40?"#22c55e":"#f59e0b"}}>{p.profitMargin.toFixed(1)}%</span>
-                              {p.comparePriceAud&&<span>Compare: A${p.comparePriceAud}</span>}
-                              {p.shopifyStatus&&<span>Shopify: {p.shopifyStatus}</span>}
-                            </>
-                          ):(
-                            <>
-                              <span>💰 ${p.supplierPrice} → ${p.sellingPrice}</span>
-                              <span style={{color:p.profitMargin>=60?"#22c55e":"#f59e0b"}}>{p.profitMargin}%</span>
-                              {p.analysis&&<span>Score: {p.analysis.overallScore}/100</span>}
-                              {p.competitionLevel&&<span>Competition: {p.competitionLevel}</span>}
-                            </>
-                          )}
+                        <div style={{display:"flex",gap:12,marginTop:4,fontSize:11,color:"#94a3b8"}}>
+                          <span>ðŸ’° ${p.supplierPrice} â†’ ${p.sellingPrice}</span>
+                          <span style={{color:p.profitMargin>=60?"#22c55e":"#f59e0b"}}>{p.profitMargin}%</span>
+                          {p.analysis&&<span>Score: {p.analysis.overallScore}/100</span>}
+                          {p.competitionLevel&&<span>Competition: {p.competitionLevel}</span>}
                         </div>
 
                         {/* Expanded Details */}
                         {expandedId===p.id&&(
                           <div className="anim-fade" style={{marginTop:12,padding:12,background:"rgba(0,0,0,.3)",borderRadius:8,border:"1px solid rgba(255,255,255,.04)"}}>
-                            {p._source==="railway"&&(
-                              <div style={{marginBottom:12}}>
-                                <div style={{fontSize:11,fontWeight:600,color:"#a78bfa",marginBottom:4}}>Railway Details</div>
-                                {p.description&&<div style={{fontSize:10,color:"#94a3b8",marginBottom:4}}>{p.description}</div>}
-                                {p.supplier&&<div style={{fontSize:10,color:"#64748b"}}>Supplier: {p.supplier.platform} · Rating: {p.supplier.rating} · Orders: {p.supplier.totalOrders}</div>}
-                                {p.tags?.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:4}}>{p.tags.map((t,i)=><span key={i} style={{fontSize:9,padding:"2px 6px",background:"rgba(139,92,246,.1)",color:"#a78bfa",borderRadius:8}}>{t}</span>)}</div>}
-                                {p.listing&&p.listing.shopifyTitle&&(
-                                  <div style={{marginTop:8}}>
-                                    <div style={{fontSize:10,fontWeight:600,color:"#34d399"}}>AI Content</div>
-                                    <div style={{fontSize:10,color:"#94a3b8"}}>{p.listing.shopifyTitle}</div>
-                                    {p.listing.seoDescription&&<div style={{fontSize:9,color:"#64748b",marginTop:2}}>SEO: {p.listing.seoDescription}</div>}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                            {p._source==="ai"&&p.analysis&&(
+                            {p.analysis&&(
                               <div style={{marginBottom:12}}>
                                 <div style={{fontSize:11,fontWeight:600,color:"#a5b4fc",marginBottom:4}}>Analysis</div>
                                 <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
                                   {["trendScore","demandScore","competitionScore","overallScore"].map(k=>
-                                    p.analysis[k]!=null?<div key={k} style={{textAlign:"center",padding:"6px",background:"rgba(255,255,255,.03)",borderRadius:6}}>
+                                    <div key={k} style={{textAlign:"center",padding:"6px",background:"rgba(255,255,255,.03)",borderRadius:6}}>
                                       <div style={{fontSize:9,color:"#64748b"}}>{k.replace("Score","")}</div>
                                       <div style={{fontSize:16,fontWeight:700,color:p.analysis[k]>=70?"#22c55e":p.analysis[k]>=50?"#f59e0b":"#ef4444"}}>{p.analysis[k]}</div>
-                                    </div>:null
+                                    </div>
                                   )}
                                 </div>
                                 {p.analysis.reasoning&&<div style={{fontSize:10,color:"#94a3b8",marginTop:6}}>{p.analysis.reasoning}</div>}
-                                {p.analysis.marketingAngle&&<div style={{fontSize:10,color:"#a5b4fc",marginTop:2}}>💡 {p.analysis.marketingAngle}</div>}
+                                {p.analysis.marketingAngle&&<div style={{fontSize:10,color:"#a5b4fc",marginTop:2}}>ðŸ’¡ {p.analysis.marketingAngle}</div>}
                               </div>
                             )}
-                            {p._source==="ai"&&p.listing&&(
+                            {p.listing&&(
                               <div style={{marginBottom:12}}>
                                 <div style={{fontSize:11,fontWeight:600,color:"#34d399",marginBottom:4}}>Listing</div>
                                 <div style={{fontSize:11,color:"#94a3b8"}}>{p.listing.shopifyTitle}</div>
@@ -1047,14 +727,14 @@ function V9() {
                             {p.competitors&&(
                               <div style={{marginBottom:8}}>
                                 <div style={{fontSize:11,fontWeight:600,color:"#fbbf24",marginBottom:4}}>Competitors</div>
-                                {p.competitors.competitors?.map((c,i)=><div key={i} style={{fontSize:10,color:"#94a3b8"}}>• {c.name} — ${c.price} ⭐{c.rating}</div>)}
+                                {p.competitors.competitors?.map((c,i)=><div key={i} style={{fontSize:10,color:"#94a3b8"}}>â€¢ {c.name} â€” ${c.price} â­{c.rating}</div>)}
                                 <div style={{fontSize:10,color:"#64748b",marginTop:2}}>Saturation: {p.competitors.saturationLevel}/100</div>
                               </div>
                             )}
                             {p.supplierData&&(
                               <div>
                                 <div style={{fontSize:11,fontWeight:600,color:"#06b6d4",marginBottom:4}}>Suppliers</div>
-                                {p.supplierData.suppliers?.map((s,i)=><div key={i} style={{fontSize:10,color:"#94a3b8"}}>• {s.name} ({s.platform}) — ${s.price} · {s.shippingDays}d ⭐{s.rating}</div>)}
+                                {p.supplierData.suppliers?.map((s,i)=><div key={i} style={{fontSize:10,color:"#94a3b8"}}>â€¢ {s.name} ({s.platform}) â€” ${s.price} Â· {s.shippingDays}d â­{s.rating}</div>)}
                               </div>
                             )}
                           </div>
@@ -1063,28 +743,18 @@ function V9() {
 
                       {/* Actions */}
                       <div style={{display:"flex",flexDirection:"column",gap:4,flexShrink:0}}>
-                        {p._source==="railway"?(
-                          <>
-                            <Btn size="sm" onClick={()=>rwApprove(p._rwId)} style={{background:"rgba(34,197,94,.12)",color:"#22c55e"}}><CheckCircle size={11}/></Btn>
-                            <Btn size="sm" variant="danger" onClick={()=>rwReject(p._rwId)}><XCircle size={11}/></Btn>
-                            {CHANNELS.slice(0,2).map(ch=><Btn key={ch.id} size="sm" variant="ghost" onClick={()=>rwMarketplace(p._rwId,ch.id)} style={{color:ch.c}}>{ch.icon}</Btn>)}
-                          </>
-                        ):(
-                          <>
-                            {p.status==="discovered"&&<Btn size="sm" onClick={()=>handleAnalyze(p)} loading={analyzingId===p.id}><Brain size={11}/></Btn>}
-                            {p.status==="analyzed"&&<Btn size="sm" onClick={()=>handleListing(p)} loading={listingId===p.id}><FileText size={11}/></Btn>}
-                            <Btn size="sm" variant="ghost" onClick={()=>handleReview(p)} loading={reviewingId===p.id}><Shield size={11}/></Btn>
-                            <Btn size="sm" variant="ghost" onClick={()=>handleImage(p)} loading={imageSearchId===p.id}><Image size={11}/></Btn>
-                            <Btn size="sm" variant="ghost" onClick={()=>handleCompetitor(p)} loading={competitorCheckId===p.id}><Target size={11}/></Btn>
-                            <Btn size="sm" variant="ghost" onClick={()=>handleSupplier(p)} loading={supplierSearchId===p.id}><Truck size={11}/></Btn>
-                            {p.status!=="killed"&&<Btn size="sm" variant="danger" onClick={()=>handleKill(p)}><Skull size={11}/></Btn>}
-                          </>
-                        )}
+                        {p.status==="discovered"&&<Btn size="sm" onClick={()=>handleAnalyze(p)} loading={analyzingId===p.id}><Brain size={11}/></Btn>}
+                        {p.status==="analyzed"&&<Btn size="sm" onClick={()=>handleListing(p)} loading={listingId===p.id}><FileText size={11}/></Btn>}
+                        <Btn size="sm" variant="ghost" onClick={()=>handleReview(p)} loading={reviewingId===p.id}><Shield size={11}/></Btn>
+                        <Btn size="sm" variant="ghost" onClick={()=>handleImage(p)} loading={imageSearchId===p.id}><Image size={11}/></Btn>
+                        <Btn size="sm" variant="ghost" onClick={()=>handleCompetitor(p)} loading={competitorCheckId===p.id}><Target size={11}/></Btn>
+                        <Btn size="sm" variant="ghost" onClick={()=>handleSupplier(p)} loading={supplierSearchId===p.id}><Truck size={11}/></Btn>
+                        {p.status!=="killed"&&<Btn size="sm" variant="danger" onClick={()=>handleKill(p)}><Skull size={11}/></Btn>}
                       </div>
                     </div>
 
-                    {/* Channel Push (for listed AI products) */}
-                    {p._source==="ai"&&p.status==="listed"&&p.listing&&(
+                    {/* Channel Push (for listed products) */}
+                    {p.status==="listed"&&p.listing&&(
                       <div style={{display:"flex",gap:6,marginTop:8,paddingTop:8,borderTop:"1px solid rgba(255,255,255,.04)"}}>
                         <span style={{fontSize:10,color:"#64748b",alignSelf:"center"}}>Push to:</span>
                         {CHANNELS.map(ch=><Btn key={ch.id} size="sm" variant="ghost" onClick={()=>cpClip(JSON.stringify({title:p.listing.shopifyTitle,description:p.listing.shopifyDescription,price:p.sellingPrice,tags:p.listing.tags}),"push-"+ch.id+p.id)} style={{borderColor:ch.c+"30",color:ch.c}}>{ch.icon} {ch.name}</Btn>)}
@@ -1092,19 +762,18 @@ function V9() {
                     )}
                   </Panel>
                 ))}
-                {allProdsFiltered.length===0&&(
+                {prods.filter(p=>statusFilter==="all"||p.status===statusFilter).length===0&&(
                   <Panel style={{textAlign:"center",padding:40}}>
                     <Package size={32} style={{color:"#333",margin:"0 auto 12px"}}/>
-                    <div style={{fontSize:14,color:"#64748b"}}>{totalProductCount===0?"No products found":"No products match this filter"}</div>
-                    {totalProductCount===0&&<Btn onClick={()=>{setStatusFilter("all");setView("discovery");}} style={{marginTop:12}}><Search size={13}/> Go to Discovery</Btn>}
-                    {totalProductCount>0&&<Btn onClick={()=>{setStatusFilter("all");setSourceFilter("all");}} style={{marginTop:12}}>Clear Filters</Btn>}
+                    <div style={{fontSize:14,color:"#64748b"}}>No products found</div>
+                    <Btn onClick={()=>{setStatusFilter("all");setView("discovery");}} style={{marginTop:12}}><Search size={13}/> Go to Discovery</Btn>
                   </Panel>
                 )}
               </div>
             </div>
           )}
 
-          {/* ═══ STORE MANAGER ═══ */}
+          {/* â•â•â• STORE MANAGER â•â•â• */}
           {view === "manager" && (
             <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
               <Panel>
@@ -1178,7 +847,7 @@ function V9() {
                 {prods.filter(p=>p.review?.verdict==="kill"||p.review?.verdict==="reprice"||p.review?.verdict==="scale").map(p=>(
                   <div key={p.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,.04)"}}>
                     <div style={{display:"flex",alignItems:"center",gap:8}}>
-                      <span style={{fontSize:16}}>{p.review?.verdict==="kill"?"💀":p.review?.verdict==="reprice"?"💰":"🚀"}</span>
+                      <span style={{fontSize:16}}>{p.review?.verdict==="kill"?"ðŸ’€":p.review?.verdict==="reprice"?"ðŸ’°":"ðŸš€"}</span>
                       <div>
                         <div style={{fontSize:12,fontWeight:600,color:"#e2e8f0"}}>{p.title}</div>
                         <div style={{fontSize:10,color:"#64748b"}}>{p.review?.reasoning?.substring(0,80)}</div>
@@ -1191,13 +860,13 @@ function V9() {
                   </div>
                 ))}
                 {prods.filter(p=>p.review?.verdict==="kill"||p.review?.verdict==="reprice"||p.review?.verdict==="scale").length===0&&(
-                  <div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>No products flagged — run a manager cycle to review</div>
+                  <div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>No products flagged â€” run a manager cycle to review</div>
                 )}
               </Panel>
             </div>
           )}
 
-          {/* ═══ OPERATIONS ═══ */}
+          {/* â•â•â• OPERATIONS â•â•â• */}
           {view === "operations" && (
             <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
               {/* Order Pipeline Metrics */}
@@ -1224,8 +893,8 @@ function V9() {
                         <Badge status={o.status} size="lg"/>
                       </div>
                       <div style={{fontSize:10,color:"#64748b",marginTop:2}}>
-                        {o.customer?.name||"Customer"} · ${o.total?.toFixed(2)||"0.00"} · {o.items?.length||0} items
-                        {o.statusHistory&&<span> · Last: {new Date(o.statusHistory[o.statusHistory.length-1]?.time||o.createdAt).toLocaleString()}</span>}
+                        {o.customer?.name||"Customer"} Â· ${o.total?.toFixed(2)||"0.00"} Â· {o.items?.length||0} items
+                        {o.statusHistory&&<span> Â· Last: {new Date(o.statusHistory[o.statusHistory.length-1]?.time||o.createdAt).toLocaleString()}</span>}
                       </div>
                       {/* Mini Timeline */}
                       <div style={{display:"flex",gap:2,marginTop:6}}>
@@ -1240,7 +909,7 @@ function V9() {
                     </Btn>
                   </div>
                 ))}
-                {orders.length===0&&<div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>No local orders yet — orders from the storefront will appear here</div>}
+                {orders.length===0&&<div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>No local orders yet â€” orders from the storefront will appear here</div>}
               </Panel>
 
               {/* Railway Orders */}
@@ -1255,7 +924,7 @@ function V9() {
                           <Badge status={o.status}/>
                           {o.fraud?.score>0&&<FraudBadge score={o.fraud.score}/>}
                         </div>
-                        <div style={{fontSize:10,color:"#64748b"}}>{o.customer?.name} · ${o.financials?.total?.toFixed(2)||"0"} · {o.items?.length||0} items</div>
+                        <div style={{fontSize:10,color:"#64748b"}}>{o.customer?.name} Â· ${o.financials?.total?.toFixed(2)||"0"} Â· {o.items?.length||0} items</div>
                       </div>
                       <div style={{display:"flex",gap:4}}>
                         {o.fraud?.score>=30&&!o.fraud?.reviewed&&<>
@@ -1281,7 +950,7 @@ function V9() {
                         <div style={{display:"flex",gap:8,alignItems:"center"}}>
                           <span style={{fontSize:10,padding:"2px 8px",borderRadius:8,background:inv.inStock?"rgba(34,197,94,.1)":"rgba(239,68,68,.1)",color:inv.inStock?"#22c55e":"#ef4444"}}>{inv.stockLevel||"?"}</span>
                           <span style={{fontSize:10,color:"#64748b"}}>Ship: {inv.estimatedShipDays}d</span>
-                          {inv.priceChanged&&<span style={{fontSize:10,color:"#f59e0b"}}>⚠ ${inv.newPrice}</span>}
+                          {inv.priceChanged&&<span style={{fontSize:10,color:"#f59e0b"}}>âš  ${inv.newPrice}</span>}
                         </div>
                       </div>
                     );
@@ -1291,7 +960,7 @@ function V9() {
             </div>
           )}
 
-          {/* ═══ RAILWAY ═══ */}
+          {/* â•â•â• RAILWAY â•â•â• */}
           {view === "railway" && (
             <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
               {/* Connection Status */}
@@ -1301,7 +970,7 @@ function V9() {
                     <span style={{width:12,height:12,borderRadius:"50%",background:rwOnline?"#22c55e":"#ef4444",boxShadow:rwOnline?"0 0 12px rgba(34,197,94,.4)":"none"}}/>
                     <div>
                       <h3 style={{fontSize:15,fontWeight:700,color:"#e2e8f0",margin:0}}>Railway Backend</h3>
-                      <div style={{fontSize:11,color:"#64748b"}}>{rwOnline?`Connected · ${rwSys?.uptime||""}`:RAILWAY}</div>
+                      <div style={{fontSize:11,color:"#64748b"}}>{rwOnline?`Connected Â· ${rwSys?.uptime||""}`:RAILWAY}</div>
                     </div>
                   </div>
                   <Btn onClick={syncRw} loading={syncing}><RefreshCw size={12}/> Sync</Btn>
@@ -1314,8 +983,8 @@ function V9() {
                 {/* Dashboard Metrics */}
                 {rwDash&&(
                   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10}}>
-                    <Metric icon={<Package size={16}/>} label="Total Products" value={rwDash.products?.total||0} color="#6366f1" sub={`${rwDash.products?.active||0} active · ${rwDash.products?.awaitingApproval||0} pending`}/>
-                    <Metric icon={<ShoppingCart size={16}/>} label="Orders" value={rwDash.orders?.total||0} color="#f59e0b" sub={`${rwDash.orders?.new||0} new · ${rwDash.orders?.fraudAlerts||0} fraud`}/>
+                    <Metric icon={<Package size={16}/>} label="Total Products" value={rwDash.products?.total||0} color="#6366f1" sub={`${rwDash.products?.active||0} active Â· ${rwDash.products?.awaitingApproval||0} pending`}/>
+                    <Metric icon={<ShoppingCart size={16}/>} label="Orders" value={rwDash.orders?.total||0} color="#f59e0b" sub={`${rwDash.orders?.new||0} new Â· ${rwDash.orders?.fraudAlerts||0} fraud`}/>
                     <Metric icon={<DollarSign size={16}/>} label="Today Revenue" value={rwDash.orders?.todaysRevenue||"$0"} color="#22c55e"/>
                     <Metric icon={<Layers size={16}/>} label="Pipeline" value={rwPipe?.lastCompleted?.type||"Idle"} color="#8b5cf6" sub={rwPipe?.lastCompleted?.completedAt?`Done: ${new Date(rwPipe.lastCompleted.completedAt).toLocaleTimeString()}`:""}/>
                   </div>
@@ -1332,12 +1001,12 @@ function V9() {
                   </div>
                   {rwPipe?.active&&(
                     <div style={{marginTop:10,padding:"8px 12px",background:"rgba(99,102,241,.08)",borderRadius:8}}>
-                      <div style={{fontSize:12,color:"#a5b4fc"}}>🔄 Running: {rwPipe.active.type} — {rwPipe.active.status}</div>
+                      <div style={{fontSize:12,color:"#a5b4fc"}}>ðŸ”„ Running: {rwPipe.active.type} â€” {rwPipe.active.status}</div>
                     </div>
                   )}
                   {rwPipe?.history?.slice(0,3).map((h,i)=>(
                     <div key={i} style={{fontSize:10,color:"#64748b",marginTop:4}}>
-                      {h.status==="completed"?"✅":"❌"} {h.type} — {h.results?.productsProcessed||0} products · {new Date(h.completedAt||h.startedAt).toLocaleString()}
+                      {h.status==="completed"?"âœ…":"âŒ"} {h.type} â€” {h.results?.productsProcessed||0} products Â· {new Date(h.completedAt||h.startedAt).toLocaleString()}
                     </div>
                   ))}
                 </Panel>
@@ -1353,8 +1022,8 @@ function V9() {
                           <Badge status={p.pipeline?.status||p.status||"draft"}/>
                         </div>
                         <div style={{fontSize:10,color:"#64748b"}}>
-                          Cost: ${p.costUsd?.toFixed(2)} · Sell: A${p.sellingPriceAud?.toFixed(2)} · Margin: {p.profitMarginPercent?.toFixed(0)}%
-                          {p.supplier&&<span> · {p.supplier.platform} ⭐{p.supplier.rating}</span>}
+                          Cost: ${p.costUsd?.toFixed(2)} Â· Sell: A${p.sellingPriceAud?.toFixed(2)} Â· Margin: {p.profitMarginPercent?.toFixed(0)}%
+                          {p.supplier&&<span> Â· {p.supplier.platform} â­{p.supplier.rating}</span>}
                         </div>
                       </div>
                       <div style={{display:"flex",gap:4}}>
@@ -1364,7 +1033,7 @@ function V9() {
                       </div>
                     </div>
                   ))}
-                  {rwProds.length===0&&<div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:16}}>No Railway products — run the pipeline to discover products</div>}
+                  {rwProds.length===0&&<div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:16}}>No Railway products â€” run the pipeline to discover products</div>}
                 </Panel>
 
                 {/* Fraud Queue */}
@@ -1378,7 +1047,7 @@ function V9() {
                             <span style={{fontSize:12,fontWeight:600,color:"#e2e8f0"}}>{o.shopifyOrderId||o._id?.substring(0,10)}</span>
                             <FraudBadge score={o.fraud?.score||0}/>
                           </div>
-                          <div style={{fontSize:10,color:"#64748b"}}>{o.customer?.name} · ${o.financials?.total?.toFixed(2)} · Flags: {o.fraud?.flags?.join(", ")||"none"}</div>
+                          <div style={{fontSize:10,color:"#64748b"}}>{o.customer?.name} Â· ${o.financials?.total?.toFixed(2)} Â· Flags: {o.fraud?.flags?.join(", ")||"none"}</div>
                         </div>
                         <div style={{display:"flex",gap:4}}>
                           <Btn size="sm" onClick={()=>rwFraud(o._id,"approve")} style={{background:"rgba(34,197,94,.12)",color:"#22c55e"}}><CheckCircle size={11}/> Approve</Btn>
@@ -1392,7 +1061,7 @@ function V9() {
             </div>
           )}
 
-          {/* ═══ ANALYTICS ═══ */}
+          {/* â•â•â• ANALYTICS â•â•â• */}
           {view === "analytics" && (
             <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
               {/* Time Range */}
@@ -1446,7 +1115,7 @@ function V9() {
                             <Area type="monotone" dataKey="revenue" stroke="#6366f1" fill="url(#gRev2)" strokeWidth={2}/>
                           </AreaChart>
                         </ResponsiveContainer>
-                      ):<div style={{color:"#64748b",fontSize:12}}>No revenue data yet — orders will populate the chart</div>;
+                      ):<div style={{color:"#64748b",fontSize:12}}>No revenue data yet â€” orders will populate the chart</div>;
                     })()}
                   </div>
                 )}
@@ -1464,6 +1133,7 @@ function V9() {
                         {name:"Listed",value:byS("listed"),fill:"#22c55e"},
                         {name:"Killed",value:byS("killed"),fill:"#ef4444"},
                       ].filter(d=>d.value>0)} dataKey="value" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={3}>
+                        {[{fill:"#f59e0b"},{fill:"#3b82f6"},{fill:"#22c55e"},{fill:"#ef4444"}].map((e,i)=><Cell key={i} fill={e.fill}/>)}
                       </Pie>
                       <Tooltip contentStyle={{background:"#1a1a2e",border:"1px solid #27272a",borderRadius:8,fontSize:11}}/>
                       <Legend wrapperStyle={{fontSize:11,color:"#94a3b8"}}/>
@@ -1479,7 +1149,7 @@ function V9() {
                       <ScoreRing score={p.analysis?.overallScore||0} size={28}/>
                       <div style={{flex:1}}>
                         <div style={{fontSize:12,fontWeight:600,color:"#e2e8f0"}}>{p.title?.substring(0,35)}</div>
-                        <div style={{fontSize:10,color:"#64748b"}}>${p.sellingPrice} · {p.profitMargin}%</div>
+                        <div style={{fontSize:10,color:"#64748b"}}>${p.sellingPrice} Â· {p.profitMargin}%</div>
                       </div>
                     </div>
                   ))}
@@ -1529,7 +1199,7 @@ function V9() {
             </div>
           )}
 
-          {/* ═══ ACTIVITY ═══ */}
+          {/* â•â•â• ACTIVITY â•â•â• */}
           {view === "activity" && (
             <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
               <Panel>
@@ -1553,7 +1223,7 @@ function V9() {
                 <Hdr icon={<Search size={16}/>} title="Discovery Log"/>
                 {(st.discoveryLog||[]).map((l,i)=>(
                   <div key={i} style={{fontSize:11,color:"#94a3b8",padding:"4px 0",borderBottom:"1px solid rgba(255,255,255,.03)"}}>
-                    {l.auto?"⏰ Auto":"🔍 Manual"} · {l.count} products · {new Date(l.time).toLocaleString()}
+                    {l.auto?"â° Auto":"ðŸ” Manual"} Â· {l.count} products Â· {new Date(l.time).toLocaleString()}
                   </div>
                 ))}
               </Panel>
@@ -1577,473 +1247,10 @@ function V9() {
             </div>
           )}
 
-          {/* ═══ OPENCLAW ═══ */}
-          {view === "openclaw" && (
-            <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
-              {/* OpenClaw Header */}
-              <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",background:"linear-gradient(135deg,rgba(99,102,241,.08),rgba(139,92,246,.08))",border:"1px solid rgba(99,102,241,.2)",borderRadius:12}}>
-                <Brain size={24} style={{color:"#a78bfa"}}/>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:16,fontWeight:700,color:"#e2e8f0"}}>OpenClaw AI Manager</div>
-                  <div style={{fontSize:11,color:"#94a3b8"}}>Natural language control for products, orders, pipelines & support</div>
-                </div>
-                <Btn size="sm" onClick={()=>{ocFetchOverview();ocFetchTickets();}} variant="ghost"><RefreshCw size={12}/> Refresh</Btn>
-              </div>
-
-              {/* Tab Bar */}
-              <div style={{display:"flex",gap:4,background:"rgba(15,15,25,.5)",padding:4,borderRadius:10,border:"1px solid #1e1e2e"}}>
-                {[{id:"chat",label:"💬 Chat",icon:null},{id:"support",label:"🎫 Support"},{id:"products",label:"📦 Products"},{id:"quick",label:"⚡ Quick Actions"}].map(t=>(
-                  <button key={t.id} onClick={()=>setOcTab(t.id)} style={{flex:1,padding:"8px 12px",borderRadius:8,border:"none",cursor:"pointer",fontSize:12,fontWeight:600,background:ocTab===t.id?"rgba(99,102,241,.15)":"transparent",color:ocTab===t.id?"#a5b4fc":"#64748b",transition:"all .2s"}}>{t.label}</button>
-                ))}
-              </div>
-
-              {/* CHAT TAB */}
-              {ocTab === "chat" && (
-                <Panel style={{display:"flex",flexDirection:"column",height:500}}>
-                  <Hdr icon={<Brain size={16}/>} title="OpenClaw Chat" actionLabel="Clear" action={()=>setOcMessages([{role:"system",text:"Chat cleared. Ready for commands."}])}/>
-                  <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:8,padding:"8px 0",marginBottom:8}}>
-                    {ocMessages.map((m,i)=>(
-                      <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
-                        <div style={{maxWidth:"85%",padding:"10px 14px",borderRadius:12,fontSize:12,lineHeight:1.5,whiteSpace:"pre-wrap",
-                          background:m.role==="user"?"rgba(99,102,241,.15)":m.role==="system"?"rgba(34,197,94,.08)":"rgba(30,30,50,.8)",
-                          border:`1px solid ${m.role==="user"?"rgba(99,102,241,.3)":m.role==="system"?"rgba(34,197,94,.2)":"rgba(139,92,246,.2)"}`,
-                          color:m.role==="user"?"#c7d2fe":"#e2e8f0"}}>
-                          {m.role==="assistant"&&<div style={{fontSize:9,color:"#a78bfa",marginBottom:4,fontWeight:600}}>🐾 OPENCLAW</div>}
-                          {m.text}
-                          {m.time&&<div style={{fontSize:9,color:"#475569",marginTop:4}}>{new Date(m.time).toLocaleTimeString()}</div>}
-                        </div>
-                      </div>
-                    ))}
-                    {ocLoading&&<div style={{display:"flex",gap:6,padding:12}}><span style={{width:6,height:6,borderRadius:"50%",background:"#a78bfa",animation:"pulse 1s infinite"}}/>
-                      <span style={{width:6,height:6,borderRadius:"50%",background:"#a78bfa",animation:"pulse 1s infinite .2s"}}/>
-                      <span style={{width:6,height:6,borderRadius:"50%",background:"#a78bfa",animation:"pulse 1s infinite .4s"}}/></div>}
-                  </div>
-                  <div style={{display:"flex",gap:8}}>
-                    <input value={ocInput} onChange={e=>setOcInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&ocSend(ocInput)}
-                      placeholder="Ask OpenClaw... e.g. 'approve all products scoring above 70'" style={{flex:1,padding:"10px 14px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:10,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
-                    <Btn onClick={()=>ocSend(ocInput)} loading={ocLoading}><Send size={13}/> Send</Btn>
-                  </div>
-                  {/* Suggested Commands */}
-                  <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:8}}>
-                    {["Show pending orders","List top products","Run full pipeline","How are sales today?","Kill products scoring below 30","Approve all analyzed products"].map(cmd=>(
-                      <button key={cmd} onClick={()=>ocSend(cmd)} style={{padding:"4px 10px",borderRadius:16,border:"1px solid #1e1e2e",background:"rgba(15,15,25,.5)",color:"#94a3b8",fontSize:10,cursor:"pointer"}}>{cmd}</button>
-                    ))}
-                  </div>
-                </Panel>
-              )}
-
-              {/* SUPPORT TAB */}
-              {ocTab === "support" && (
-                <div style={{display:"flex",flexDirection:"column",gap:16}}>
-                  {/* Create Ticket */}
-                  <Panel>
-                    <Hdr icon={<Users size={16}/>} title="Create Support Ticket"/>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                      <input value={ocSupportDraft.email} onChange={e=>setOcSupportDraft(d=>({...d,email:e.target.value}))} placeholder="Customer email" style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
-                      <select value={ocSupportDraft.priority} onChange={e=>setOcSupportDraft(d=>({...d,priority:e.target.value}))} style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none"}}>
-                        <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option>
-                      </select>
-                    </div>
-                    <input value={ocSupportDraft.subject} onChange={e=>setOcSupportDraft(d=>({...d,subject:e.target.value}))} placeholder="Subject" style={{width:"100%",marginTop:8,padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none",boxSizing:"border-box"}}/>
-                    <textarea value={ocSupportDraft.message} onChange={e=>setOcSupportDraft(d=>({...d,message:e.target.value}))} placeholder="Customer message..." rows={3} style={{width:"100%",marginTop:8,padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none",resize:"vertical",boxSizing:"border-box"}}/>
-                    <div style={{marginTop:8}}><Btn onClick={ocCreateTicket}><Send size={13}/> Create Ticket</Btn></div>
-                  </Panel>
-
-                  {/* Ticket List */}
-                  <Panel>
-                    <Hdr icon={<FileText size={16}/>} title={`Support Tickets (${ocTickets.length})`} actionLabel="Refresh" action={ocFetchTickets}/>
-                    {ocTickets.length===0&&<div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>No tickets yet. Create one above or use chat: "create ticket for customer@email.com"</div>}
-                    {ocTickets.map(t=>(
-                      <div key={t.id} style={{padding:10,marginBottom:6,background:"rgba(15,15,25,.4)",borderRadius:8,border:"1px solid #1e1e2e"}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <div style={{fontSize:12,fontWeight:600,color:"#e2e8f0"}}>{t.subject}</div>
-                          <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                            <span style={{fontSize:9,padding:"2px 6px",borderRadius:8,background:t.priority==="urgent"?"rgba(239,68,68,.15)":t.priority==="high"?"rgba(245,158,11,.15)":"rgba(99,102,241,.1)",color:t.priority==="urgent"?"#ef4444":t.priority==="high"?"#f59e0b":"#94a3b8"}}>{t.priority}</span>
-                            <span style={{fontSize:9,padding:"2px 6px",borderRadius:8,background:t.status==="open"?"rgba(34,197,94,.1)":"rgba(99,102,241,.1)",color:t.status==="open"?"#22c55e":"#94a3b8"}}>{t.status}</span>
-                          </div>
-                        </div>
-                        <div style={{fontSize:10,color:"#64748b",marginTop:4}}>{t.customer} · {new Date(t.createdAt).toLocaleDateString()}</div>
-                        <div style={{display:"flex",gap:6,marginTop:6}}>
-                          <Btn size="sm" onClick={()=>ocAutoReply(t.id)} loading={ocAutoReplyLoading===t.id}><Brain size={11}/> AI Reply</Btn>
-                          <Btn size="sm" variant="ghost" onClick={()=>ocSend(`respond to ticket ${t.id} with a helpful update`)}><Send size={11}/> Chat Reply</Btn>
-                        </div>
-                      </div>
-                    ))}
-                  </Panel>
-
-                  {/* Auto-Response Config */}
-                  <Panel style={{background:"rgba(99,102,241,.03)"}}>
-                    <Hdr icon={<Brain size={16}/>} title="AI Customer Support"/>
-                    <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.6}}>
-                      OpenClaw can automatically respond to customer inquiries. Use chat commands like:<br/>
-                      • "auto-reply to all open tickets"<br/>
-                      • "respond to ticket [id] about shipping delay"<br/>
-                      • "create ticket for customer@email.com about refund request"<br/>
-                      • "escalate ticket [id] to urgent"
-                    </div>
-                  </Panel>
-                </div>
-              )}
-
-              {/* PRODUCTS TAB — AI Edit */}
-              {ocTab === "products" && (
-                <div style={{display:"flex",flexDirection:"column",gap:16}}>
-                  <Panel>
-                    <Hdr icon={<Edit size={16}/>} title="AI Product Editor"/>
-                    <div style={{fontSize:11,color:"#94a3b8",marginBottom:10}}>Select a product and describe what to change. OpenClaw will edit it using AI.</div>
-                    <select value={ocProductEdit.id} onChange={e=>setOcProductEdit(d=>({...d,id:e.target.value}))} style={{width:"100%",padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none",boxSizing:"border-box"}}>
-                      <option value="">Select product...</option>
-                      {rwProds.map(p=><option key={p._id||p.id} value={p._id||p.id}>{p.title} ({p.status})</option>)}
-                      {prods.map(p=><option key={p.id} value={p.id}>[Local] {p.title}</option>)}
-                    </select>
-                    <textarea value={ocProductEdit.instruction} onChange={e=>setOcProductEdit(d=>({...d,instruction:e.target.value}))} placeholder="e.g. 'Make the title more catchy and add holiday-themed tags'" rows={3}
-                      style={{width:"100%",marginTop:8,padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none",resize:"vertical",boxSizing:"border-box"}}/>
-                    <div style={{marginTop:8}}><Btn onClick={ocAiEditProduct} loading={ocEditLoading}><Edit size={13}/> AI Edit Product</Btn></div>
-                  </Panel>
-
-                  {/* Bulk Actions */}
-                  <Panel>
-                    <Hdr icon={<Layers size={16}/>} title="Bulk Product Management"/>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                      <Btn size="sm" onClick={()=>ocSend("approve all products with score above 60")}><CheckCircle size={12}/> Auto-Approve (60+)</Btn>
-                      <Btn size="sm" onClick={()=>ocSend("kill all products scoring below 30 that are older than 7 days")}><Skull size={12}/> Kill Low Scores</Btn>
-                      <Btn size="sm" variant="ghost" onClick={()=>ocSend("reprice all listed products to maximize margin while staying competitive")}><DollarSign size={12}/> AI Reprice All</Btn>
-                      <Btn size="sm" variant="ghost" onClick={()=>ocSend("list products that need attention - low scores, no images, or stale")}><AlertCircle size={12}/> Needs Attention</Btn>
-                    </div>
-                  </Panel>
-
-                  {/* Overview Stats */}
-                  {ocOverview && (
-                    <Panel>
-                      <Hdr icon={<Database size={16}/>} title="System Overview"/>
-                      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
-                        <Metric icon={<Package size={14}/>} label="Products" value={ocOverview.products?.total||0} color="#6366f1" sub={`${ocOverview.products?.listed||0} listed`}/>
-                        <Metric icon={<ShoppingCart size={14}/>} label="Orders" value={ocOverview.orders?.total||0} color="#f59e0b" sub={`${ocOverview.orders?.pending||0} pending`}/>
-                        <Metric icon={<CheckCircle size={14}/>} label="Approved" value={ocOverview.products?.approved||0} color="#22c55e"/>
-                        <Metric icon={<Truck size={14}/>} label="Shipped" value={ocOverview.orders?.shipped||0} color="#06b6d4"/>
-                      </div>
-                      {ocOverview.topProducts?.length>0&&(
-                        <div style={{marginTop:12}}>
-                          <div style={{fontSize:11,fontWeight:600,color:"#94a3b8",marginBottom:6}}>Top Products</div>
-                          {ocOverview.topProducts.map((p,i)=>(
-                            <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 0",borderBottom:"1px solid rgba(255,255,255,.03)",fontSize:11}}>
-                              <span style={{color:"#e2e8f0"}}>{p.title?.slice(0,40)}</span>
-                              <span style={{color:"#a5b4fc",fontWeight:600}}>Score: {p.score}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </Panel>
-                  )}
-                </div>
-              )}
-
-              {/* QUICK ACTIONS TAB */}
-              {ocTab === "quick" && (
-                <div style={{display:"flex",flexDirection:"column",gap:16}}>
-                  <Panel>
-                    <Hdr icon={<Zap size={16}/>} title="Pipeline Control"/>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                      <Btn onClick={()=>ocQuickAction({action:"run_pipeline",type:"full"})} loading={ocLoading}><Rocket size={13}/> Full Pipeline</Btn>
-                      <Btn onClick={()=>ocQuickAction({action:"run_pipeline",type:"trend"})} loading={ocLoading}><TrendingUp size={13}/> Trend Scout</Btn>
-                      <Btn onClick={()=>ocQuickAction({action:"run_pipeline",type:"supplier"})} loading={ocLoading}><Globe size={13}/> Supplier Source</Btn>
-                      <Btn onClick={()=>ocQuickAction({action:"run_pipeline",type:"enrich"})} loading={ocLoading}><Brain size={13}/> AI Enrich</Btn>
-                      <Btn onClick={()=>ocQuickAction({action:"run_pipeline",type:"competitor"})} loading={ocLoading}><Target size={13}/> Competitor Scan</Btn>
-                    </div>
-                  </Panel>
-
-                  <Panel>
-                    <Hdr icon={<ShoppingCart size={16}/>} title="Order Management"/>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                      <Btn size="sm" onClick={()=>ocSend("show all pending orders with details")}><Clock size={12}/> View Pending</Btn>
-                      <Btn size="sm" onClick={()=>ocSend("auto-fulfill all processing orders")}><Truck size={12}/> Auto-Fulfill</Btn>
-                      <Btn size="sm" onClick={()=>ocSend("show fraud queue")} variant="ghost"><AlertTriangle size={12}/> Fraud Queue</Btn>
-                      <Btn size="sm" onClick={()=>ocSend("give me an order summary for today")} variant="ghost"><FileText size={12}/> Daily Summary</Btn>
-                    </div>
-                  </Panel>
-
-                  <Panel>
-                    <Hdr icon={<Settings size={16}/>} title="System Control"/>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                      <Btn size="sm" onClick={()=>ocQuickAction({action:"health_check"})}><Activity size={12}/> Health Check</Btn>
-                      <Btn size="sm" onClick={()=>ocQuickAction({action:"get_analytics",period:"24h"})}><TrendingUp size={12}/> 24h Analytics</Btn>
-                      <Btn size="sm" onClick={()=>ocQuickAction({action:"get_analytics",period:"7d"})} variant="ghost"><TrendingUp size={12}/> 7d Analytics</Btn>
-                      <Btn size="sm" onClick={()=>ocQuickAction({action:"pipeline_status"})} variant="ghost"><Server size={12}/> Pipeline Status</Btn>
-                      <Btn size="sm" onClick={()=>ocQuickAction({action:"get_logs",limit:10})} variant="ghost"><FileText size={12}/> Recent Logs</Btn>
-                    </div>
-                  </Panel>
-
-                  <Panel style={{background:"rgba(139,92,246,.04)"}}>
-                    <Hdr icon={<Store size={16}/>} title="Store Sync"/>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                      <Btn size="sm" onClick={()=>ocSend("sync all approved products to Shopify")}><ExternalLink size={12}/> Sync to Shopify</Btn>
-                      <Btn size="sm" onClick={()=>ocSend("sync all approved products to WooCommerce")}><ExternalLink size={12}/> Sync to WooCommerce</Btn>
-                      <Btn size="sm" onClick={()=>ocSend("check inventory levels for all listed products")} variant="ghost"><RefreshCw size={12}/> Inventory Check</Btn>
-                    </div>
-                  </Panel>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ═══ STOREFRONT ═══ */}
-          {view === "store" && (
-            <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
-              {/* Store Header */}
-              <div style={{background:"linear-gradient(135deg,#0f0f1a,#1a1025)",border:"1px solid #27272a",borderRadius:16,padding:"24px 28px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                <div>
-                  <h1 style={{fontSize:22,fontWeight:800,color:"#f8fafc",margin:0,letterSpacing:-.5}}>XeriaCO</h1>
-                  <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>Curated Quality Products</div>
-                </div>
-                <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                  {[{id:'browse',l:'Shop'},{id:'track',l:'Track Order'},{id:'support',l:'Support'}].map(t=>(
-                    <button key={t.id} onClick={()=>setStoreView(t.id)} style={{padding:"6px 14px",borderRadius:8,border:"none",cursor:"pointer",fontSize:11,fontWeight:600,background:storeView===t.id?"rgba(99,102,241,.15)":"transparent",color:storeView===t.id?"#a5b4fc":"#94a3b8"}}>{t.l}</button>
-                  ))}
-                  <button onClick={()=>setCartOpen(!cartOpen)} style={{position:"relative",padding:"8px 14px",borderRadius:10,border:"1px solid #27272a",background:"rgba(15,15,25,.8)",color:"#e2e8f0",cursor:"pointer",fontSize:12,fontWeight:600}}>
-                    <ShoppingCart size={14} style={{marginRight:6}}/>{cart.length} · ${cartTotal.toFixed(2)}
-                  </button>
-                </div>
-              </div>
-
-              {/* Cart Drawer */}
-              {cartOpen && (
-                <Panel style={{borderColor:"rgba(99,102,241,.2)"}}>
-                  <Hdr icon={<ShoppingCart size={16}/>} title={`Cart (${cart.length})`} actionLabel="Close" action={()=>setCartOpen(false)}/>
-                  {cart.length===0?<div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>Cart is empty</div>:(
-                    <>
-                      {cart.map(item=>(
-                        <div key={item.id} style={{display:"flex",alignItems:"center",gap:12,padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,.03)"}}>
-                          <div style={{width:40,height:40,borderRadius:8,background:"#1a1a2e",display:"flex",alignItems:"center",justifyContent:"center"}}><Package size={16} style={{color:"#6366f1"}}/></div>
-                          <div style={{flex:1}}>
-                            <div style={{fontSize:12,fontWeight:600,color:"#e2e8f0"}}>{item.title}</div>
-                            <div style={{fontSize:10,color:"#94a3b8"}}>${item.price.toFixed(2)} each</div>
-                          </div>
-                          <div style={{display:"flex",alignItems:"center",gap:6}}>
-                            <button onClick={()=>updateCartQty(item.id,item.quantity-1)} style={{width:24,height:24,borderRadius:6,border:"1px solid #27272a",background:"#0a0a1a",color:"#e2e8f0",cursor:"pointer",fontSize:12}}>-</button>
-                            <span style={{fontSize:12,fontWeight:600,color:"#e2e8f0",width:20,textAlign:"center"}}>{item.quantity}</span>
-                            <button onClick={()=>updateCartQty(item.id,item.quantity+1)} style={{width:24,height:24,borderRadius:6,border:"1px solid #27272a",background:"#0a0a1a",color:"#e2e8f0",cursor:"pointer",fontSize:12}}>+</button>
-                          </div>
-                          <div style={{fontSize:12,fontWeight:700,color:"#a5b4fc",width:60,textAlign:"right"}}>${(item.price*item.quantity).toFixed(2)}</div>
-                          <button onClick={()=>removeFromCart(item.id)} style={{background:"none",border:"none",cursor:"pointer"}}><X size={14} style={{color:"#ef4444"}}/></button>
-                        </div>
-                      ))}
-                      <div style={{display:"flex",flexDirection:"column",gap:4,marginTop:12,paddingTop:12,borderTop:"1px solid #27272a"}}>
-                        <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8"}}><span>Subtotal</span><span>${cartTotal.toFixed(2)}</span></div>
-                        <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8"}}><span>Shipping</span><span>{cartShipping===0?'FREE':`$${cartShipping.toFixed(2)}`}</span></div>
-                        <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8"}}><span>GST (10%)</span><span>${cartTax.toFixed(2)}</span></div>
-                        <div style={{display:"flex",justifyContent:"space-between",fontSize:14,fontWeight:700,color:"#e2e8f0",marginTop:4}}><span>Total</span><span>${cartGrand.toFixed(2)}</span></div>
-                      </div>
-                      <Btn onClick={()=>{setStoreView('checkout');setCartOpen(false);}} style={{marginTop:12,width:"100%"}}><ShoppingCart size={13}/> Proceed to Checkout</Btn>
-                    </>
-                  )}
-                </Panel>
-              )}
-
-              {/* BROWSE VIEW */}
-              {storeView === 'browse' && (
-                <>
-                  {/* Search & Filters */}
-                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                    <div style={{flex:1,minWidth:200,position:"relative"}}>
-                      <Search size={14} style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"#64748b"}}/>
-                      <input value={storeSearch} onChange={e=>setStoreSearch(e.target.value)} onKeyDown={e=>e.key==='Enter'&&fetchStoreProducts()} placeholder="Search products..."
-                        style={{width:"100%",padding:"10px 12px 10px 36px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:10,color:"#e2e8f0",fontSize:12,outline:"none",boxSizing:"border-box"}}/>
-                    </div>
-                    <select value={storeCat} onChange={e=>setStoreCat(e.target.value)} style={{padding:"10px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:10,color:"#e2e8f0",fontSize:12,outline:"none"}}>
-                      {storeCategories.map(c=><option key={c} value={c}>{c==='all'?'All Categories':c}</option>)}
-                    </select>
-                    <select value={storeSort} onChange={e=>setStoreSort(e.target.value)} style={{padding:"10px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:10,color:"#e2e8f0",fontSize:12,outline:"none"}}>
-                      <option value="newest">Newest</option><option value="price_low">Price: Low→High</option><option value="price_high">Price: High→Low</option><option value="popular">Most Popular</option>
-                    </select>
-                    <Btn onClick={fetchStoreProducts} loading={storeLoading} size="sm"><RefreshCw size={12}/></Btn>
-                  </div>
-
-                  {/* Product Grid */}
-                  {storeLoading?<div style={{textAlign:"center",padding:40,color:"#64748b"}}>Loading products...</div>:
-                  storeProducts.length===0?<div style={{textAlign:"center",padding:40,color:"#64748b"}}>No products found. Run the discovery pipeline to add products!</div>:(
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
-                      {storeProducts.map(p=>(
-                        <div key={p.id} onClick={()=>{setSelProduct(p);setStoreView('product');}} style={{background:"rgba(15,15,25,.6)",border:"1px solid #1e1e2e",borderRadius:12,overflow:"hidden",cursor:"pointer",transition:"all .2s"}}>
-                          <div style={{height:160,background:"linear-gradient(135deg,#0f0f2a,#1a1035)",display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
-                            {p.image?<img src={p.image} alt={p.title} style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain"}}/>:<Package size={40} style={{color:"#27272a"}}/>}
-                            {p.badge&&<span style={{position:"absolute",top:8,right:8,padding:"2px 8px",borderRadius:8,fontSize:9,fontWeight:700,background:p.badge==='Hot'?"rgba(239,68,68,.15)":"rgba(34,197,94,.15)",color:p.badge==='Hot'?"#ef4444":"#22c55e"}}>{p.badge}</span>}
-                          </div>
-                          <div style={{padding:12}}>
-                            <div style={{fontSize:10,color:"#6366f1",fontWeight:600,marginBottom:2}}>{p.category}</div>
-                            <div style={{fontSize:13,fontWeight:600,color:"#e2e8f0",marginBottom:4,lineHeight:1.3}}>{p.title}</div>
-                            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
-                              <span style={{fontSize:16,fontWeight:800,color:"#22c55e"}}>${p.price.toFixed(2)}</span>
-                              {p.comparePrice>p.price&&<span style={{fontSize:11,color:"#64748b",textDecoration:"line-through"}}>${p.comparePrice.toFixed(2)}</span>}
-                            </div>
-                            <div style={{display:"flex",alignItems:"center",gap:4,fontSize:10,color:"#94a3b8"}}>
-                              <Star size={10} style={{fill:"#f59e0b",color:"#f59e0b"}}/> {p.rating} ({p.reviewCount} reviews)
-                            </div>
-                            <button onClick={e=>{e.stopPropagation();addToCart(p);}} style={{marginTop:8,width:"100%",padding:"8px 0",borderRadius:8,border:"none",background:"rgba(99,102,241,.15)",color:"#a5b4fc",fontSize:11,fontWeight:600,cursor:"pointer"}}>Add to Cart</button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* PRODUCT DETAIL */}
-              {storeView === 'product' && selProduct && (
-                <Panel>
-                  <button onClick={()=>setStoreView('browse')} style={{background:"none",border:"none",color:"#6366f1",cursor:"pointer",fontSize:12,marginBottom:12,display:"flex",alignItems:"center",gap:4}}><ArrowRight size={12} style={{transform:"rotate(180deg)"}}/> Back to Shop</button>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24}}>
-                    <div style={{height:300,background:"linear-gradient(135deg,#0f0f2a,#1a1035)",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                      {selProduct.image?<img src={selProduct.image} alt={selProduct.title} style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain"}}/>:<Package size={60} style={{color:"#27272a"}}/>}
-                    </div>
-                    <div>
-                      <div style={{fontSize:11,color:"#6366f1",fontWeight:600}}>{selProduct.category}</div>
-                      <h2 style={{fontSize:20,fontWeight:700,color:"#f8fafc",margin:"4px 0 8px"}}>{selProduct.title}</h2>
-                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                        <Star size={14} style={{fill:"#f59e0b",color:"#f59e0b"}}/> <span style={{fontSize:13,color:"#e2e8f0"}}>{selProduct.rating}</span>
-                        <span style={{fontSize:11,color:"#64748b"}}>({selProduct.reviewCount} reviews)</span>
-                      </div>
-                      <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:12}}>
-                        <span style={{fontSize:28,fontWeight:800,color:"#22c55e"}}>${selProduct.price.toFixed(2)}</span>
-                        {selProduct.comparePrice>selProduct.price&&<span style={{fontSize:16,color:"#64748b",textDecoration:"line-through"}}>${selProduct.comparePrice.toFixed(2)}</span>}
-                      </div>
-                      <div style={{fontSize:12,color:"#94a3b8",lineHeight:1.6,marginBottom:16}}>{selProduct.description||'Premium quality product, carefully curated for our customers.'}</div>
-                      <div style={{display:"flex",flexWrap:"wrap",gap:4,marginBottom:16}}>
-                        {(selProduct.tags||[]).map(t=><span key={t} style={{padding:"3px 10px",borderRadius:12,background:"rgba(99,102,241,.08)",border:"1px solid rgba(99,102,241,.15)",fontSize:10,color:"#a5b4fc"}}>{t}</span>)}
-                      </div>
-                      <div style={{display:"flex",gap:8,marginBottom:12}}>
-                        <div style={{display:"flex",alignItems:"center",gap:4,fontSize:10,color:"#22c55e"}}><CheckCircle size={12}/> In Stock</div>
-                        <div style={{display:"flex",alignItems:"center",gap:4,fontSize:10,color:"#94a3b8"}}><Truck size={12}/> {cartTotal>=100?'Free Shipping':'$9.95 Shipping'}</div>
-                      </div>
-                      <Btn onClick={()=>addToCart(selProduct)}><ShoppingCart size={13}/> Add to Cart — ${selProduct.price.toFixed(2)}</Btn>
-                    </div>
-                  </div>
-                </Panel>
-              )}
-
-              {/* CHECKOUT */}
-              {storeView === 'checkout' && (
-                <Panel>
-                  <Hdr icon={<ShoppingCart size={16}/>} title="Checkout"/>
-                  {cart.length===0?<div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>Cart is empty. <button onClick={()=>setStoreView('browse')} style={{background:"none",border:"none",color:"#6366f1",cursor:"pointer"}}>Continue shopping</button></div>:(
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24}}>
-                      <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                        <div style={{fontSize:14,fontWeight:600,color:"#e2e8f0"}}>Shipping Information</div>
-                        {[{k:'name',l:'Full Name',p:'John Smith'},{k:'email',l:'Email',p:'john@example.com'},{k:'phone',l:'Phone',p:'+61...'},{k:'address',l:'Address',p:'123 Main St'},{k:'city',l:'City',p:'Sydney'},{k:'zip',l:'Postcode',p:'2000'}].map(f=>(
-                          <label key={f.k} style={{display:"flex",flexDirection:"column",gap:3}}>
-                            <span style={{fontSize:10,color:"#64748b"}}>{f.l}</span>
-                            <input value={checkoutForm[f.k]||''} onChange={e=>setCheckoutForm(d=>({...d,[f.k]:e.target.value}))} placeholder={f.p}
-                              style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
-                          </label>
-                        ))}
-                      </div>
-                      <div>
-                        <div style={{fontSize:14,fontWeight:600,color:"#e2e8f0",marginBottom:12}}>Order Summary</div>
-                        {cart.map(i=>(
-                          <div key={i.id} style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#94a3b8",padding:"4px 0"}}><span>{i.title} × {i.quantity}</span><span>${(i.price*i.quantity).toFixed(2)}</span></div>
-                        ))}
-                        <div style={{borderTop:"1px solid #27272a",marginTop:8,paddingTop:8,display:"flex",flexDirection:"column",gap:4}}>
-                          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8"}}><span>Subtotal</span><span>${cartTotal.toFixed(2)}</span></div>
-                          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8"}}><span>Shipping</span><span>{cartShipping===0?'FREE':`$${cartShipping.toFixed(2)}`}</span></div>
-                          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8"}}><span>GST</span><span>${cartTax.toFixed(2)}</span></div>
-                          <div style={{display:"flex",justifyContent:"space-between",fontSize:16,fontWeight:700,color:"#f8fafc",marginTop:4}}><span>Total</span><span>${cartGrand.toFixed(2)}</span></div>
-                        </div>
-                        <Btn onClick={placeOrder} loading={checkoutLoading} style={{marginTop:16,width:"100%"}}><Check size={13}/> Place Order — ${cartGrand.toFixed(2)}</Btn>
-                        <div style={{fontSize:9,color:"#475569",textAlign:"center",marginTop:8}}>🔒 Secure checkout · Free shipping over $100</div>
-                      </div>
-                    </div>
-                  )}
-                </Panel>
-              )}
-
-              {/* ORDER CONFIRMATION */}
-              {storeView === 'confirmation' && lastOrder && (
-                <Panel style={{textAlign:"center",padding:32}}>
-                  <div style={{fontSize:48,marginBottom:8}}>✅</div>
-                  <h2 style={{fontSize:20,fontWeight:700,color:"#22c55e",margin:"0 0 4px"}}>Order Confirmed!</h2>
-                  <div style={{fontSize:14,color:"#e2e8f0",fontWeight:600}}>{lastOrder.orderId}</div>
-                  <div style={{fontSize:12,color:"#94a3b8",marginTop:4}}>Total: ${lastOrder.order?.total?.toFixed(2)}</div>
-                  <div style={{fontSize:11,color:"#64748b",marginTop:8}}>Estimated delivery: {lastOrder.order?.estimatedDelivery}</div>
-                  <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:16}}>
-                    <Btn onClick={()=>setStoreView('browse')}><Package size={13}/> Continue Shopping</Btn>
-                    <Btn variant="ghost" onClick={()=>{setTrackInput(lastOrder.orderId);setStoreView('track');}}><Truck size={13}/> Track Order</Btn>
-                  </div>
-                </Panel>
-              )}
-
-              {/* ORDER TRACKING */}
-              {storeView === 'track' && (
-                <Panel>
-                  <Hdr icon={<Truck size={16}/>} title="Track Your Order"/>
-                  <div style={{display:"flex",gap:8,marginBottom:16}}>
-                    <input value={trackInput} onChange={e=>setTrackInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&trackOrder()} placeholder="Enter order ID (e.g. XCO-...)"
-                      style={{flex:1,padding:"10px 14px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:10,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
-                    <Btn onClick={trackOrder}><Search size={13}/> Track</Btn>
-                  </div>
-                  {trackResult && !trackResult.error && (
-                    <div>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                        <div><div style={{fontSize:14,fontWeight:700,color:"#e2e8f0"}}>{trackResult.orderId}</div><div style={{fontSize:10,color:"#64748b"}}>{new Date(trackResult.createdAt).toLocaleDateString()}</div></div>
-                        <span style={{padding:"4px 12px",borderRadius:8,fontSize:11,fontWeight:600,background:trackResult.status==='delivered'?"rgba(34,197,94,.15)":"rgba(99,102,241,.15)",color:trackResult.status==='delivered'?"#22c55e":"#a5b4fc"}}>{trackResult.status}</span>
-                      </div>
-                      {trackResult.trackingNumber&&<div style={{fontSize:11,color:"#94a3b8",marginBottom:8}}>Tracking: {trackResult.trackingNumber} ({trackResult.carrier||'Standard'})</div>}
-                      <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                        {(trackResult.statusHistory||[]).map((h,i)=>(
-                          <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"6px 0"}}>
-                            <div style={{width:8,height:8,borderRadius:"50%",background:i===0?"#22c55e":"#27272a",marginTop:3,flexShrink:0}}/>
-                            <div><div style={{fontSize:12,color:"#e2e8f0",fontWeight:500}}>{h.status}</div><div style={{fontSize:9,color:"#475569"}}>{new Date(h.time).toLocaleString()}{h.note?` — ${h.note}`:''}</div></div>
-                          </div>
-                        ))}
-                      </div>
-                      <div style={{marginTop:12,borderTop:"1px solid #1e1e2e",paddingTop:12}}>
-                        {(trackResult.items||[]).map((i,idx)=>(
-                          <div key={idx} style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#94a3b8",padding:"3px 0"}}><span>{i.title} × {i.quantity}</span><span>${(i.price*i.quantity).toFixed(2)}</span></div>
-                        ))}
-                        <div style={{display:"flex",justifyContent:"space-between",fontSize:13,fontWeight:700,color:"#e2e8f0",marginTop:6}}><span>Total</span><span>${trackResult.total?.toFixed(2)}</span></div>
-                      </div>
-                    </div>
-                  )}
-                  {trackResult?.error&&<div style={{fontSize:12,color:"#ef4444",textAlign:"center",padding:12}}>{trackResult.error}</div>}
-                </Panel>
-              )}
-
-              {/* CUSTOMER SUPPORT */}
-              {storeView === 'support' && (
-                <Panel>
-                  <Hdr icon={<Users size={16}/>} title="Customer Support"/>
-                  {supportResult?(
-                    <div style={{textAlign:"center",padding:20}}>
-                      <div style={{fontSize:32,marginBottom:8}}>📨</div>
-                      <div style={{fontSize:14,fontWeight:600,color:"#22c55e"}}>Inquiry Received!</div>
-                      <div style={{fontSize:12,color:"#94a3b8",marginTop:4}}>{supportResult.message}</div>
-                      {supportResult.autoResponse&&(
-                        <div style={{marginTop:12,padding:12,background:"rgba(99,102,241,.05)",borderRadius:10,border:"1px solid rgba(99,102,241,.15)",textAlign:"left"}}>
-                          <div style={{fontSize:9,color:"#a78bfa",fontWeight:600,marginBottom:4}}>🐾 AI RESPONSE</div>
-                          <div style={{fontSize:12,color:"#e2e8f0",lineHeight:1.6,whiteSpace:"pre-wrap"}}>{supportResult.autoResponse}</div>
-                        </div>
-                      )}
-                      <Btn onClick={()=>setSupportResult(null)} style={{marginTop:12}}>Submit Another Inquiry</Btn>
-                    </div>
-                  ):(
-                    <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                        <input value={supportForm.email} onChange={e=>setSupportForm(d=>({...d,email:e.target.value}))} placeholder="Your email" style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
-                        <input value={supportForm.orderId} onChange={e=>setSupportForm(d=>({...d,orderId:e.target.value}))} placeholder="Order ID (optional)" style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
-                      </div>
-                      <input value={supportForm.subject} onChange={e=>setSupportForm(d=>({...d,subject:e.target.value}))} placeholder="Subject" style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none"}}/>
-                      <textarea value={supportForm.message} onChange={e=>setSupportForm(d=>({...d,message:e.target.value}))} placeholder="How can we help?" rows={4} style={{padding:"8px 12px",background:"rgba(15,15,25,.8)",border:"1px solid #27272a",borderRadius:8,color:"#e2e8f0",fontSize:12,outline:"none",resize:"vertical"}}/>
-                      <Btn onClick={submitSupport}><Send size={13}/> Submit Inquiry</Btn>
-                      <div style={{fontSize:10,color:"#475569",textAlign:"center"}}>Our AI-powered support team typically responds within minutes</div>
-                    </div>
-                  )}
-                </Panel>
-              )}
-            </div>
-          )}
-
         </div>{/* end padding div */}
       </main>{/* end main */}
 
-      {/* ═══ SETTINGS MODAL ═══ */}
+      {/* â•â•â• SETTINGS MODAL â•â•â• */}
       {showSettings&&(
         <div style={{position:"fixed",inset:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"center"}}>
           <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.7)",backdropFilter:"blur(4px)"}} onClick={()=>setShowSettings(false)}/>
@@ -2068,13 +1275,13 @@ function V9() {
             </div>
             <div style={{display:"flex",gap:8,marginTop:20,justifyContent:"flex-end"}}>
               <Btn variant="ghost" onClick={()=>setShowSettings(false)}>Cancel</Btn>
-              <Btn onClick={()=>{setSt(p=>({...p,...settingsDraft}));setShowSettings(false);log("⚙️ Settings saved","success");}}>Save</Btn>
+              <Btn onClick={()=>{setSt(p=>({...p,...settingsDraft}));setShowSettings(false);log("âš™ï¸ Settings saved","success");}}>Save</Btn>
             </div>
           </div>
         </div>
       )}
 
-      {/* ═══ PROMPT EDITOR MODAL ═══ */}
+      {/* â•â•â• PROMPT EDITOR MODAL â•â•â• */}
       {showPromptEditor&&(
         <div style={{position:"fixed",inset:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"center"}}>
           <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.7)",backdropFilter:"blur(4px)"}} onClick={()=>setShowPromptEditor(false)}/>
@@ -2099,13 +1306,13 @@ function V9() {
             </div>
             <div style={{display:"flex",gap:8,marginTop:20,justifyContent:"flex-end"}}>
               <Btn variant="ghost" onClick={()=>setShowPromptEditor(false)}>Cancel</Btn>
-              <Btn onClick={()=>{setSt(p=>({...p,...promptsDraft}));setShowPromptEditor(false);log("📝 Prompts saved","success");}}>Save</Btn>
+              <Btn onClick={()=>{setSt(p=>({...p,...promptsDraft}));setShowPromptEditor(false);log("ðŸ“ Prompts saved","success");}}>Save</Btn>
             </div>
           </div>
         </div>
       )}
 
-      {/* ═══ EXPORT MODAL ═══ */}
+      {/* â•â•â• EXPORT MODAL â•â•â• */}
       {showExport&&(
         <div style={{position:"fixed",inset:0,zIndex:100,display:"flex",alignItems:"center",justifyContent:"center"}}>
           <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.7)",backdropFilter:"blur(4px)"}} onClick={()=>setShowExport(false)}/>
