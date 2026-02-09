@@ -31,13 +31,11 @@ const MIME = {
 };
 
 const server = http.createServer((req, res) => {
-  // Health check
   if (req.url === '/health' || req.url === '/api/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ status: 'ok', service: 'xeriaco-frontend', version: '9.1.0', uptime: Math.floor(process.uptime()) }));
+    return res.end(JSON.stringify({ status: 'ok', service: 'xeriaco-frontend', version: '9.2.0', uptime: Math.floor(process.uptime()) }));
   }
 
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
@@ -45,10 +43,8 @@ const server = http.createServer((req, res) => {
   let url = (req.url || '/').split('?')[0];
   let fp = path.join(DIST, url === '/' ? 'index.html' : url);
 
-  // Security: prevent path traversal
   if (!fp.startsWith(DIST)) { res.writeHead(403); return res.end('Forbidden'); }
 
-  // If file doesn't exist, serve index.html (SPA routing)
   if (!fs.existsSync(fp) || fs.statSync(fp).isDirectory()) {
     fp = path.join(DIST, 'index.html');
   }
@@ -57,14 +53,9 @@ const server = http.createServer((req, res) => {
     const data = fs.readFileSync(fp);
     const ext = path.extname(fp);
     const contentType = MIME[ext] || 'application/octet-stream';
-    
-    // Cache static assets aggressively
     const cacheControl = ext === '.html' ? 'no-cache' : 'public, max-age=31536000, immutable';
     
-    res.writeHead(200, {
-      'Content-Type': contentType,
-      'Cache-Control': cacheControl,
-    });
+    res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': cacheControl });
     res.end(data);
   } catch (e) {
     console.error(`[XeriaCo V9] Serve error for ${url}:`, e.message);
