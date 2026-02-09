@@ -41,10 +41,20 @@ const defState = () => ({
   },
 });
 
-// â”€â”€ Storage â”€â”€
+// —— Storage (localStorage fallback for standalone deploy) ——
 const sto = {
-  get: async (k) => { try { const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null; } catch { return null; } },
-  set: async (k, v) => { try { await window.storage.set(k, JSON.stringify(v)); } catch {} },
+  get: async (k) => {
+    try {
+      if (typeof window !== 'undefined' && window.storage?.get) { const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null; }
+      const v = localStorage.getItem(k); return v ? JSON.parse(v) : null;
+    } catch { return null; }
+  },
+  set: async (k, v) => {
+    try {
+      if (typeof window !== 'undefined' && window.storage?.set) { await window.storage.set(k, JSON.stringify(v)); return; }
+      localStorage.setItem(k, JSON.stringify(v));
+    } catch {}
+  },
 };
 
 // â”€â”€ Railway API Client â”€â”€
@@ -82,6 +92,9 @@ const api = {
   system: () => api._f("/api/admin/system"),
   updatePricing: (d) => api._f("/api/admin/config/pricing",{method:"POST",body:JSON.stringify(d)}),
   marketplace: (id,ch) => api._f(`/api/marketplace/push/${id}`,{method:"POST",body:JSON.stringify({channel:ch})}),
+  cancelPipe: () => api._f("/api/admin/pipeline/cancel",{method:"POST"}),
+  fixDrafts: () => api._f("/api/admin/bulk/fix-drafts",{method:"POST"}),
+  bulkReprice: () => api._f("/api/admin/bulk/reprice-all",{method:"POST"}),
 };
 
 // â”€â”€ AI Functions (in-artifact Anthropic API) â”€â”€
@@ -551,7 +564,8 @@ function V9() {
                   <Hdr icon={<Server size={16}/>} title="System Status"/>
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
                     {[
-                      {label:"AI Engine",online:true,detail:`${st.aiCalls||0} calls`},
+                      {label:"AI Engine (In-Artifact)",online:true,detail:`${st.aiCalls||0} calls`},
+                      {label:"AI Engine (Backend)",online:rwSys?.services?.anthropicAI?.configured||false,detail:"DeepSeek primary"},
                       {label:"Railway Backend",online:rwOnline,detail:rwDash?`${rwDash?.products?.total||0} products`:"Offline"},
                       {label:"Clawdbot",online:cbOnline,detail:cbOnline?"Connected":"Offline"},
                       {label:"Store Manager",online:st.storeManager?.enabled,detail:st.storeManager?.enabled?`${st.storeManager.totalKills||0} kills, ${st.storeManager.totalReprices||0} reprices`:"Disabled"},
@@ -998,6 +1012,9 @@ function V9() {
                     <Btn variant="ghost" onClick={rwTrend}><Search size={13}/> TrendScout</Btn>
                     <Btn variant="ghost" onClick={rwSupplier}><Truck size={13}/> SupplierSource</Btn>
                     <Btn variant="ghost" onClick={rwEnrich}><Brain size={13}/> AI Enrich</Btn>
+                    <Btn variant="ghost" onClick={async()=>{log("⏹ Cancelling pipeline...");const r=await api.cancelPipe();if(r?.cancelled)log(`✅ Cancelled ${r.cancelled} run(s)`,"success");syncRw();}}><XCircle size={13}/> Cancel Pipeline</Btn>
+                    <Btn variant="ghost" onClick={async()=>{log("🔧 Fixing draft products...");const r=await api.fixDrafts();if(r?.fixed)log(`✅ Fixed ${r.fixed} drafts`,"success");syncRw();}}><CheckCircle size={13}/> Fix Drafts</Btn>
+                    <Btn variant="ghost" onClick={async()=>{log("💰 Repricing all...");const r=await api.bulkReprice();if(r)log(`✅ Updated ${r.updated}/${r.total}`,"success");syncRw();}}><DollarSign size={13}/> Reprice All</Btn>
                   </div>
                   {rwPipe?.active&&(
                     <div style={{marginTop:10,padding:"8px 12px",background:"rgba(99,102,241,.08)",borderRadius:8}}>
