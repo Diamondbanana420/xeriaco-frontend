@@ -5,8 +5,8 @@
     "buildCommand": "echo 'Pre-built, nothing to build'"
   },
   "deploy": {
-    "startCommand": "node serve.cjs",
-    "healthcheckPath": "/",
+    "startCommand": "node server.js",
+    "healthcheckPath": "/health",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }
