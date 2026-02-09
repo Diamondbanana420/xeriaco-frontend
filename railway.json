@@ -2,7 +2,7 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm install && npx vite build && cp public/favicon.svg dist/"
+    "buildCommand": "echo 'Pre-built frontend, skipping build'"
   },
   "deploy": {
     "startCommand": "node server.cjs",
