@@ -1,1 +1,1 @@
-web: node serve.cjs
+web: node server.js
