@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'xeriaco-frontend', version: '9.2.0', uptime: Math.floor(process.uptime()) });
+  res.json({ status: 'ok', service: 'xeriaco-frontend', version: '9.3.0', uptime: Math.floor(process.uptime()) });
 });
 
 app.use(express.static(join(__dirname, 'dist'), { maxAge: '1d', etag: true }));
