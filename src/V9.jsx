@@ -41,20 +41,10 @@ const defState = () => ({
   },
 });
 
-// —— Storage (localStorage fallback for standalone deploy) ——
+// â”€â”€ Storage â”€â”€
 const sto = {
-  get: async (k) => {
-    try {
-      if (typeof window !== 'undefined' && window.storage?.get) { const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null; }
-      const v = localStorage.getItem(k); return v ? JSON.parse(v) : null;
-    } catch { return null; }
-  },
-  set: async (k, v) => {
-    try {
-      if (typeof window !== 'undefined' && window.storage?.set) { await window.storage.set(k, JSON.stringify(v)); return; }
-      localStorage.setItem(k, JSON.stringify(v));
-    } catch {}
-  },
+  get: async (k) => { try { const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null; } catch { return null; } },
+  set: async (k, v) => { try { await window.storage.set(k, JSON.stringify(v)); } catch {} },
 };
 
 // â”€â”€ Railway API Client â”€â”€
