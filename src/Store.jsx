@@ -6,6 +6,13 @@ import { Search, X, Plus, Minus, ChevronRight, ChevronDown, Star, Package, Arrow
 //  Luxury galaxy theme · Railway API
 // ═══════════════════════════════════════
 const API = "https://xeriaco-backend-production.up.railway.app/api";
+
+// ═══ Analytics Tracker ═══
+const trackEvent = (event, data = {}) => {
+  try { fetch(`${API}/analytics/event`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event, data, sessionId: window.__xeriaco_sid }) }).catch(() => {}); } catch {}
+};
+if (!window.__xeriaco_sid) window.__xeriaco_sid = Math.random().toString(36).slice(2);
+
 const DISCORD = "https://discord.com/api/webhooks/1469565950410883195/kjH0T7HosN5G81TASYOifybT2PxhUNmHfonYmZCzKQ3hyIa-kZGozCdmLANEd8nx85FI";
 const CLAWDBOT = "https://distracted-borg.preview.emergentagent.com/api/webhook";
 
@@ -119,6 +126,7 @@ export default function XeriaCoStorefront() {
       setOrders(lsGet("xeriaco_orders") || []);
       setFavorites(lsGet("xeriaco_favs") || []);
       setLoading(false);
+      trackEvent('page_view');
     })();
     pollRef.current = setInterval(pullProducts, 30000);
     const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -133,6 +141,7 @@ export default function XeriaCoStorefront() {
     if (p.stock === "out") return;
     setCart(prev => { const ex = prev.find(i => i.id === p.id); if (ex) return prev.map(i => i.id === p.id ? { ...i, qty: i.qty + qty } : i); return [...prev, { ...p, qty }]; });
     setAddedFx(p.id); setTimeout(() => setAddedFx(null), 1500);
+    trackEvent('add_to_cart', { productId: p.id, title: p.title, price: p.price });
   };
   const rmCart = id => setCart(p => p.filter(i => i.id !== id));
   const setCartQty = (id, q) => { if (q <= 0) return rmCart(id); setCart(p => p.map(i => i.id === id ? { ...i, qty: q } : i)); };
@@ -212,7 +221,7 @@ export default function XeriaCoStorefront() {
   filtered = [...filtered].sort((a, b) => { if (sortBy === "low") return a.price - b.price; if (sortBy === "high") return b.price - a.price; if (sortBy === "rating") return b.rating - a.rating; if (sortBy === "new") return (b.discoveredAt || "").localeCompare(a.discoveredAt || ""); return b.score - a.score; });
 
   const nav = v => { setView(v); setMobileMenu(false); window.scrollTo({ top: 0, behavior: "smooth" }); };
-  const openProduct = p => { setSelProduct(p); nav("product"); };
+  const openProduct = p => { setSelProduct(p); nav("product"); trackEvent('product_view', { productId: p.id, title: p.title }); };
   const goShop = () => { setView("shop"); setSelProduct(null); };
 
   // ═══ STYLES ═══
@@ -344,7 +353,7 @@ export default function XeriaCoStorefront() {
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13, color: V.textMuted }}><span>Subtotal</span><span>${cartTotal.toFixed(2)}</span></div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 11, color: V.textDim }}><span>Shipping</span><span style={{ color: "#22c55e" }}>FREE</span></div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16, fontSize: 18, fontWeight: 800 }}><span>Total</span><span>${cartTotal.toFixed(2)} <span style={{ fontSize: 12, color: V.textMuted, fontWeight: 400 }}>AUD</span></span></div>
-                <button className="btn-primary" style={{ width: "100%", fontSize: 14 }} onClick={() => { setCartOpen(false); nav("checkout"); }}>Checkout <ArrowRight size={15} /></button>
+                <button className="btn-primary" style={{ width: "100%", fontSize: 14 }} onClick={() => { setCartOpen(false); nav("checkout"); trackEvent('checkout_start', { total: cartTotal, items: cart.length }); }}>Checkout <ArrowRight size={15} /></button>
               </div>
             )}
           </div>
@@ -434,7 +443,7 @@ export default function XeriaCoStorefront() {
             {/* Category Tags */}
             <div style={{ display: "flex", gap: 8, marginBottom: 28, flexWrap: "wrap" }}>
               {categories.map(c => (
-                <button key={c} onClick={() => setCatFilter(c)} className="tag" style={{
+                <button key={c} onClick={() => { setCatFilter(c); if (c !== 'all') trackEvent('category_filter', { category: c }); }} className="tag" style={{
                   background: catFilter === c ? V.purple : "transparent",
                   color: catFilter === c ? "#fff" : V.textMuted,
                   borderColor: catFilter === c ? V.purple : V.border,
