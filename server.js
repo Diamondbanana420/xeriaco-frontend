@@ -21,7 +21,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     service: 'xeriaco-storefront',
-    version: '1.2.1',
+    version: '2.1.0',
     uptime: Math.floor(process.uptime()),
     distExists: fs.existsSync(DIST)
   });
