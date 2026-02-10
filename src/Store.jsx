@@ -138,10 +138,40 @@ export default function XeriaCoStorefront() {
   const setCartQty = (id, q) => { if (q <= 0) return rmCart(id); setCart(p => p.map(i => i.id === id ? { ...i, qty: q } : i)); };
   const cartTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+  const shipping = cartTotal >= 100 ? 0 : 9.95;
   const toggleFav = id => setFavorites(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
   const isFav = id => favorites.includes(id);
+  const [checkingOut, setCheckingOut] = useState(false);
+
+  // Handle Stripe success redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("success") === "true" && params.get("session_id")) {
+      apiFetch(`/checkout/session/${params.get("session_id")}`).then(d => {
+        if (d?.order) { setLastOrder(d.order); setView("confirmed"); setCart([]); lsSet("xeriaco_cart", []); }
+      });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   const placeOrder = async () => {
+    if (cart.length === 0) return;
+    setCheckingOut(true);
+    // Try Stripe checkout first
+    try {
+      const r = await fetch(`${API}/checkout/create-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cart.map(i => ({ productId: i.id, quantity: i.qty })),
+          successUrl: window.location.origin + window.location.pathname + "?success=true&session_id={CHECKOUT_SESSION_ID}",
+          cancelUrl: window.location.origin + window.location.pathname + "?canceled=true",
+        }),
+      });
+      const d = await r.json();
+      if (d.url) { window.location.href = d.url; return; }
+    } catch {}
+    // Fallback: direct order creation
     const items = cart.map(i => ({ productId: i.id, title: i.title, quantity: i.qty, price: i.price }));
     const orderData = { items, customer: form, total: cartTotal, shippingAddress: { name: form.name, address: form.address, city: form.city, zip: form.zip, country: form.country, phone: form.phone } };
     const apiResult = await apiFetch("/store/orders", { method: "POST", body: JSON.stringify(orderData) });
@@ -155,6 +185,7 @@ export default function XeriaCoStorefront() {
     lsSet("xeriaco_orders", [order, ...existing]);
     setOrders(prev => [order, ...prev]);
     setLastOrder(order); setCart([]); nav("confirmed");
+    setCheckingOut(false);
     ping(`🛒 **New Order** – ${orderId}\n${order.items.map(i => `• ${i.title} ×${i.qty}`).join("\n")}\n💰 **$${cartTotal.toFixed(2)} AUD**\n📍 ${form.name} – ${form.city}, ${form.country}`);
   };
 
@@ -513,8 +544,8 @@ export default function XeriaCoStorefront() {
                       <option value="Australia">Australia</option><option value="New Zealand">New Zealand</option><option value="United States">United States</option><option value="United Kingdom">United Kingdom</option>
                     </select>
                   </div>
-                  <button className="btn-primary" style={{ width: "100%", marginTop: 20, fontSize: 15, padding: "15px 28px" }} onClick={placeOrder} disabled={!form.name || !form.email || !form.address}>
-                    Place Order — ${cartTotal.toFixed(2)} AUD <ArrowRight size={15} />
+                  <button className="btn-primary" style={{ width: "100%", marginTop: 20, fontSize: 15, padding: "15px 28px" }} onClick={placeOrder} disabled={checkingOut || !form.name || !form.email || !form.address}>
+                    {checkingOut ? "Redirecting to payment..." : `Pay $${cartTotal.toFixed(2)} AUD — Secure Checkout`} <ArrowRight size={15} />
                   </button>
                 </div>
               </div>
