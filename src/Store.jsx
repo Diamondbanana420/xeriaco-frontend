@@ -152,7 +152,7 @@ export default function XeriaCoStorefront() {
   const isFav = id => favorites.includes(id);
   const [checkingOut, setCheckingOut] = useState(false);
 
-  // Handle Stripe success redirect
+  // Handle order success (orders arrive via Shopify webhooks)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("success") === "true" && params.get("session_id")) {
@@ -166,7 +166,7 @@ export default function XeriaCoStorefront() {
   const placeOrder = async () => {
     if (cart.length === 0) return;
     setCheckingOut(true);
-    // Try Stripe checkout first
+    // Redirect to Shopify checkout
     try {
       const r = await fetch(`${API}/checkout/create-session`, {
         method: "POST",
@@ -554,7 +554,7 @@ export default function XeriaCoStorefront() {
                     </select>
                   </div>
                   <button className="btn-primary" style={{ width: "100%", marginTop: 20, fontSize: 15, padding: "15px 28px" }} onClick={placeOrder} disabled={checkingOut || !form.name || !form.email || !form.address}>
-                    {checkingOut ? "Redirecting to payment..." : `Pay $${cartTotal.toFixed(2)} AUD — Secure Checkout`} <ArrowRight size={15} />
+                    {checkingOut ? "Redirecting to Shopify checkout..." : `Checkout $${cartTotal.toFixed(2)} AUD — Secure Payment`} <ArrowRight size={15} />
                   </button>
                 </div>
               </div>
