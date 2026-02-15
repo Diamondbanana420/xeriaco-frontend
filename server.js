@@ -29,6 +29,16 @@ app.get('/health', (req, res) => {
 
 app.use(express.static(DIST, { maxAge: '1d', etag: true }));
 
+// Admin dashboard — serve admin.html for /admin paths
+app.get('/admin', (req, res) => {
+  const admin = path.join(DIST, 'admin.html');
+  if (fs.existsSync(admin)) {
+    res.sendFile(admin);
+  } else {
+    res.redirect('/');
+  }
+});
+
 app.get('*', (req, res) => {
   const index = path.join(DIST, 'index.html');
   if (fs.existsSync(index)) {
