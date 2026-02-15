@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, Component } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, BarChart, Bar, Cell, PieChart, Pie, Legend } from "recharts";
-import { Search, Sparkles, LayoutDashboard, Activity, Box, Globe, Settings, Menu, X, RefreshCw, TrendingUp, Target, DollarSign, ChevronDown, ChevronUp, Brain, FileText, Zap, Copy, Check, AlertCircle, Package, Star, StickyNote, Filter, Download, Play, Pause, Send, Bell, Link, ExternalLink, Timer, Rocket, ArrowUpDown, Hash, Grid, Image, Edit, AlertTriangle, Shield, Skull, Repeat, Power, Wifi, WifiOff, ShoppingCart, ArrowRight, Users, Eye, Truck, Clock, Store, Database, Server, Layers, Award, Percent, RotateCcw, Trash2, CheckCircle, XCircle, Radio, Tag, Link2, Webhook, Plug, TestTube, Trash, ToggleLeft, ToggleRight } from "lucide-react";
+import { Search, Sparkles, LayoutDashboard, Activity, Box, Globe, Settings, Menu, X, RefreshCw, TrendingUp, Target, DollarSign, ChevronDown, ChevronUp, Brain, FileText, Zap, Copy, Check, AlertCircle, Package, Star, StickyNote, Filter, Download, Play, Pause, Send, Bell, Link, ExternalLink, Timer, Rocket, ArrowUpDown, Hash, Grid, Image, Edit, AlertTriangle, Shield, Skull, Repeat, Power, Wifi, WifiOff, ShoppingCart, ArrowRight, Users, Eye, Truck, Clock, Store, Database, Server, Layers, Award, Percent, RotateCcw, Trash2, CheckCircle, XCircle, Radio, Tag, Link2, Webhook, Plug, TestTube, Trash, ToggleLeft, ToggleRight, Mail, Share2, Instagram, MessageCircle } from "lucide-react";
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  XERIACO V9 â€” COMBINED OPTIMIZED DROPSHIPPING COMMAND CENTER
@@ -85,6 +85,16 @@ const api = {
   cancelPipe: () => api._f("/api/admin/pipeline/cancel",{method:"POST"}),
   fixDrafts: () => api._f("/api/admin/bulk/fix-drafts",{method:"POST"}),
   bulkReprice: () => api._f("/api/admin/bulk/reprice-all",{method:"POST"}),
+  // Marketing
+  mktStatus: () => api._f("/api/admin/marketing/status"),
+  mktSummary: () => api._f("/api/admin/marketing/summary"),
+  mktDashboard: () => api._f("/api/admin/marketing/dashboard"),
+  mktSocialHistory: (n=50) => api._f(`/api/admin/marketing/social-history?limit=${n}`),
+  mktActivity: (n=50) => api._f(`/api/admin/marketing/activity?limit=${n}`),
+  mktPostNow: (productId) => api._f("/api/admin/marketing/post-now",{method:"POST",body:JSON.stringify({productId})}),
+  mktPostAll: (productId) => api._f("/api/admin/marketing/post-all",{method:"POST",body:JSON.stringify({productId})}),
+  mktDigest: (days=7) => api._f("/api/admin/marketing/digest",{method:"POST",body:JSON.stringify({days})}),
+  mktTest: () => api._f("/api/admin/marketing/test",{method:"POST"}),
 };
 
 // â”€â”€ AI Functions (in-artifact Anthropic API) â”€â”€
@@ -266,8 +276,8 @@ function V9() {
   // â”€â”€ Railway Sync â”€â”€
   const syncRw = useCallback(async()=>{
     setSyncing(true);
-    const [d,p,o,pi,f,s] = await Promise.allSettled([api.dashboard(),api.products(100),api.orders(),api.pipeStatus(),api.fraudQ(),api.system()]);
-    if(d.value)setRwDash(d.value);if(p.value?.products)setRwProds(p.value.products);if(o.value?.orders)setRwOrds(o.value.orders);if(pi.value)setRwPipe(pi.value);if(f.value?.orders)setFraudQ(f.value.orders);if(s.value)setRwSys(s.value);
+    const [d,p,o,pi,f,s,mk] = await Promise.allSettled([api.dashboard(),api.products(100),api.orders(),api.pipeStatus(),api.fraudQ(),api.system(),api.mktDashboard()]);
+    if(d.value)setRwDash(d.value);if(p.value?.products)setRwProds(p.value.products);if(o.value?.orders)setRwOrds(o.value.orders);if(pi.value)setRwPipe(pi.value);if(f.value?.orders)setFraudQ(f.value.orders);if(s.value)setRwSys(s.value);if(mk.value)setMktData(mk.value);
     setSyncing(false);
   },[]);
 
@@ -380,6 +390,16 @@ function V9() {
   const [promptsDraft, setPromptsDraft] = useState({});
   const [rwAnalytics, setRwAnalytics] = useState(null);
   const [analyticsDays, setAnalyticsDays] = useState(30);
+
+  // Marketing state
+  const [mktData, setMktData] = useState(null);
+  const [mktSocial, setMktSocial] = useState([]);
+  const [mktActivityFeed, setMktActivityFeed] = useState([]);
+  const [mktLoading, setMktLoading] = useState(false);
+  const [mktPostingId, setMktPostingId] = useState(null);
+  const [mktTestRunning, setMktTestRunning] = useState(false);
+  const [mktTestResults, setMktTestResults] = useState(null);
+  const [mktDigestSending, setMktDigestSending] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const pendingOrders = orders.filter(o=>o.status==="pending"||o.status==="processing").length;
   const listedProds = prods.filter(p=>p.status==="listed");
@@ -447,6 +467,7 @@ function V9() {
     { id: "operations", label: "Operations", icon: ShoppingCart, badge: pendingOrders || undefined },
     { id: "railway", label: "Railway", icon: Server, badge: rwFraudCount || undefined },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
+    { id: "marketing", label: "Marketing", icon: Send },
     { id: "activity", label: "Activity", icon: Activity },
     { id: "webhooks", label: "Webhooks", icon: Link, badge: whConfigs.filter(w=>w.active).length || undefined },
   ];
@@ -603,18 +624,45 @@ function V9() {
               </div>
 
               {/* Recent Activity */}
-              <Panel>
-                <Hdr icon={<Activity size={16}/>} title="Recent Activity" actionLabel="View All" action={()=>setView("activity")}/>
-                <div style={{maxHeight:200,overflowY:"auto"}}>
-                  {(st.activityLog||[]).slice(0,8).map((e,i)=>(
-                    <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,.03)"}}>
-                      <span style={{width:4,height:4,borderRadius:"50%",background:e.type==="success"?"#22c55e":e.type==="error"?"#ef4444":"#6366f1",flexShrink:0}}/>
-                      <span style={{fontSize:11,color:"#94a3b8",flex:1}}>{e.msg}</span>
-                      <span style={{fontSize:9,color:"#475569",flexShrink:0}}>{new Date(e.time).toLocaleTimeString()}</span>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <Panel>
+                  <Hdr icon={<Activity size={16}/>} title="Recent Activity" actionLabel="View All" action={()=>setView("activity")}/>
+                  <div style={{maxHeight:200,overflowY:"auto"}}>
+                    {(st.activityLog||[]).slice(0,8).map((e,i)=>(
+                      <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,.03)"}}>
+                        <span style={{width:4,height:4,borderRadius:"50%",background:e.type==="success"?"#22c55e":e.type==="error"?"#ef4444":"#6366f1",flexShrink:0}}/>
+                        <span style={{fontSize:11,color:"#94a3b8",flex:1}}>{e.msg}</span>
+                        <span style={{fontSize:9,color:"#475569",flexShrink:0}}>{new Date(e.time).toLocaleTimeString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Panel>
+                <Panel>
+                  <Hdr icon={<Send size={16}/>} title="Marketing" actionLabel="Open" action={()=>setView("marketing")}/>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+                    <div style={{textAlign:"center",padding:8,background:"rgba(255,255,255,.02)",borderRadius:8}}>
+                      <div style={{fontSize:16,fontWeight:700,color:"#22c55e"}}>{mktData?.email?.subscriberCount||0}</div>
+                      <div style={{fontSize:9,color:"#64748b"}}>Subscribers</div>
                     </div>
-                  ))}
-                </div>
-              </Panel>
+                    <div style={{textAlign:"center",padding:8,background:"rgba(255,255,255,.02)",borderRadius:8}}>
+                      <div style={{fontSize:16,fontWeight:700,color:"#8b5cf6"}}>{mktData?.social?.totalPosts||0}</div>
+                      <div style={{fontSize:9,color:"#64748b"}}>Social Posts</div>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                    {(mktData?.social?.channels||[]).slice(0,3).map((ch,i)=>(
+                      <div key={i} style={{display:"flex",alignItems:"center",gap:6,fontSize:11}}>
+                        <span style={{width:5,height:5,borderRadius:"50%",background:ch.configured?"#22c55e":"#64748b"}}/>
+                        <span style={{color:"#94a3b8"}}>{ch.name||ch.platform}</span>
+                        <span style={{marginLeft:"auto",color:"#64748b",fontSize:10}}>{ch.configured?`${ch.postCount||0} posts`:"off"}</span>
+                      </div>
+                    ))}
+                    {(!mktData?.social?.channels||mktData.social.channels.length===0)&&(
+                      <div style={{fontSize:11,color:"#64748b",textAlign:"center",padding:8}}>Marketing data loads after redeploy</div>
+                    )}
+                  </div>
+                </Panel>
+              </div>
             </div>
           )}
 
@@ -1236,6 +1284,142 @@ function V9() {
           )}
 
           {/* â•â•â• ACTIVITY â•â•â• */}
+          {view === "marketing" && (
+            <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
+              {/* Quick Stats */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12}}>
+                <Metric icon={<Mail size={16}/>} label="Email Subscribers" value={mktData?.email?.subscriberCount||0} color="#22c55e" sub={mktData?.email?.status==="connected"?"Connected":"Not configured"}/>
+                <Metric icon={<Send size={16}/>} label="Social Posts" value={mktData?.social?.totalPosts||0} color="#8b5cf6" sub={`${(mktData?.social?.channels||[]).filter(c=>c.configured).length} channels active`}/>
+                <Metric icon={<Eye size={16}/>} label="Product Views" value={mktData?.tracking?.totalViews||0} color="#3b82f6" sub="Tracked"/>
+                <Metric icon={<Users size={16}/>} label="Newsletter Signups" value={mktData?.tracking?.newsletterSignups||0} color="#f59e0b" sub="Total"/>
+              </div>
+
+              {/* Channel Status */}
+              <Panel>
+                <Hdr icon={<Globe size={16}/>} title="Channel Status" actionLabel={mktTestRunning?"Testing...":"Test All"} loading={mktTestRunning} action={async()=>{
+                  setMktTestRunning(true);setMktTestResults(null);
+                  const r=await api.mktTest();
+                  setMktTestResults(r);setMktTestRunning(false);
+                  log(r?"Marketing channels tested":"Test failed",r?"success":"error");
+                }}/>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:10}}>
+                  {/* Email */}
+                  <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:10,padding:12}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                      <Mail size={14} style={{color:"#22c55e"}}/>
+                      <span style={{fontSize:13,fontWeight:600,color:"#e2e8f0"}}>Klaviyo Email</span>
+                      <span style={{marginLeft:"auto",width:7,height:7,borderRadius:"50%",background:mktData?.email?.status==="connected"?"#22c55e":"#64748b"}}/>
+                    </div>
+                    <div style={{fontSize:11,color:"#94a3b8"}}>
+                      {mktData?.email?.status==="connected"?<>Lists: {mktData?.email?.listCount||0} &middot; Flows: welcome, cart, post-purchase</>:"API keys not configured"}
+                    </div>
+                  </div>
+                  {/* Social Channels */}
+                  {(mktData?.social?.channels||[{name:"Instagram",configured:false},{name:"Facebook",configured:false},{name:"Pinterest",configured:false}]).map((ch,i)=>(
+                    <div key={i} style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:10,padding:12}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                        <Globe size={14} style={{color:ch.configured?"#8b5cf6":"#64748b"}}/>
+                        <span style={{fontSize:13,fontWeight:600,color:"#e2e8f0"}}>{ch.name||ch.platform}</span>
+                        <span style={{marginLeft:"auto",width:7,height:7,borderRadius:"50%",background:ch.configured?"#22c55e":"#64748b"}}/>
+                      </div>
+                      <div style={{fontSize:11,color:"#94a3b8"}}>
+                        {ch.configured?`${ch.postCount||0} posts sent`:"Not configured"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {mktTestResults&&(
+                  <div style={{marginTop:12,padding:10,background:"rgba(255,255,255,.03)",borderRadius:8,fontSize:11,color:"#94a3b8"}}>
+                    <div style={{fontWeight:600,marginBottom:4,color:"#e2e8f0"}}>Test Results:</div>
+                    <pre style={{margin:0,whiteSpace:"pre-wrap",fontSize:10}}>{JSON.stringify(mktTestResults.results||mktTestResults,null,2)}</pre>
+                  </div>
+                )}
+              </Panel>
+
+              {/* Actions */}
+              <Panel>
+                <Hdr icon={<Zap size={16}/>} title="Marketing Actions"/>
+                <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                  <Btn onClick={async()=>{setMktDigestSending(true);const r=await api.mktDigest(7);setMktDigestSending(false);log(r?.success?`Digest sent: ${r.productCount} products`:"Digest failed",r?.success?"success":"error");}} loading={mktDigestSending} variant="ghost"><Mail size={13}/> Send New Arrivals Email</Btn>
+                  <Btn onClick={async()=>{
+                    setMktLoading(true);
+                    const sh=await api.mktSocialHistory(50);
+                    const af=await api.mktActivity(50);
+                    if(sh)setMktSocial(Array.isArray(sh)?sh:sh.posts||[]);
+                    if(af)setMktActivityFeed(Array.isArray(af)?af:af.activity||[]);
+                    setMktLoading(false);
+                  }} loading={mktLoading} variant="ghost"><RefreshCw size={13}/> Refresh History</Btn>
+                </div>
+              </Panel>
+
+              {/* Post Product to Social */}
+              <Panel>
+                <Hdr icon={<Share2 size={16}/>} title="Post Product to Social"/>
+                {rwProds.length>0?(
+                  <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:300,overflowY:"auto"}}>
+                    {rwProds.filter(p=>p.status==="active"||p.status==="approved"||p.status==="listed").slice(0,20).map(p=>(
+                      <div key={p._id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",background:"rgba(255,255,255,.02)",borderRadius:8,border:"1px solid rgba(255,255,255,.04)"}}>
+                        {p.featuredImage&&<img src={p.featuredImage} alt="" style={{width:32,height:32,borderRadius:6,objectFit:"cover"}}/>}
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:12,fontWeight:600,color:"#e2e8f0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.title}</div>
+                          <div style={{fontSize:10,color:"#64748b"}}>${p.sellingPriceAud||p.sellingPrice||"?"} AUD</div>
+                        </div>
+                        <Btn size="sm" loading={mktPostingId===p._id} onClick={async()=>{
+                          setMktPostingId(p._id);
+                          const r=await api.mktPostNow(p._id);
+                          setMktPostingId(null);
+                          log(r?.success?`Posted "${p.title}" to social`:`Post failed for "${p.title}"`,r?.success?"success":"error");
+                        }}><Send size={11}/> Post</Btn>
+                      </div>
+                    ))}
+                  </div>
+                ):(
+                  <div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>No active products to post. Approve products first.</div>
+                )}
+              </Panel>
+
+              {/* Social Post History */}
+              <Panel>
+                <Hdr icon={<Clock size={16}/>} title="Social Post History" actionLabel="Load" action={async()=>{
+                  setMktLoading(true);const sh=await api.mktSocialHistory(50);if(sh)setMktSocial(Array.isArray(sh)?sh:sh.posts||[]);setMktLoading(false);
+                }} loading={mktLoading}/>
+                <div style={{display:"flex",flexDirection:"column",gap:4,maxHeight:350,overflowY:"auto"}}>
+                  {mktSocial.length>0?mktSocial.map((p,i)=>(
+                    <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,.03)"}}>
+                      <span style={{width:7,height:7,borderRadius:"50%",background:p.success?"#22c55e":"#ef4444",flexShrink:0,marginTop:5}}/>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:12,color:"#e2e8f0"}}>{p.platform||p.channel} — {p.productTitle||p.title||"Product"}</div>
+                        <div style={{fontSize:10,color:"#64748b"}}>{p.success?"\u2713 Posted":"\u2717 Failed"}{p.error?` — ${p.error}`:""} &middot; {p.timestamp?new Date(p.timestamp).toLocaleString():""}</div>
+                      </div>
+                    </div>
+                  )):(
+                    <div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>No social posts yet. Click "Load" to fetch history.</div>
+                  )}
+                </div>
+              </Panel>
+
+              {/* Marketing Activity Feed */}
+              <Panel>
+                <Hdr icon={<Activity size={16}/>} title="Marketing Activity" actionLabel="Load" action={async()=>{
+                  setMktLoading(true);const af=await api.mktActivity(50);if(af)setMktActivityFeed(Array.isArray(af)?af:af.activity||[]);setMktLoading(false);
+                }} loading={mktLoading}/>
+                <div style={{display:"flex",flexDirection:"column",gap:2,maxHeight:300,overflowY:"auto"}}>
+                  {mktActivityFeed.length>0?mktActivityFeed.map((e,i)=>(
+                    <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,.03)"}}>
+                      <span style={{width:6,height:6,borderRadius:"50%",background:e.type==="success"||e.type==="email_sent"?"#22c55e":e.type==="error"?"#ef4444":e.type==="social_post"?"#8b5cf6":"#6366f1",flexShrink:0,marginTop:4}}/>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:12,color:"#e2e8f0"}}>{e.message||e.msg||e.event}</div>
+                        <div style={{fontSize:9,color:"#475569"}}>{e.timestamp?new Date(e.timestamp).toLocaleString():""}</div>
+                      </div>
+                    </div>
+                  )):(
+                    <div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>No marketing activity yet. Click "Load" to fetch.</div>
+                  )}
+                </div>
+              </Panel>
+            </div>
+          )}
+
           {view === "webhooks" && (
             <div className="anim-fade" style={{display:"flex",flexDirection:"column",gap:16}}>
               <Panel>

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Sitemap: https://xeriaco-backend-production.up.railway.app/api/sitemap.xml
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
