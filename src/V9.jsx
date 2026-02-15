@@ -95,6 +95,12 @@ const api = {
   mktPostAll: (productId) => api._f("/api/admin/marketing/post-all",{method:"POST",body:JSON.stringify({productId})}),
   mktDigest: (days=7) => api._f("/api/admin/marketing/digest",{method:"POST",body:JSON.stringify({days})}),
   mktTest: () => api._f("/api/admin/marketing/test",{method:"POST"}),
+  mktContentQueue: (s) => api._f(`/api/admin/marketing/content-queue${s?`?status=${s}`:""}`),
+  mktContentStats: () => api._f("/api/admin/marketing/content-stats"),
+  mktContentApprove: (id) => api._f(`/api/admin/marketing/content/${id}/approve`,{method:"POST"}),
+  mktContentReject: (id,reason) => api._f(`/api/admin/marketing/content/${id}/reject`,{method:"POST",body:JSON.stringify({reason})}),
+  mktContentRegen: (id) => api._f(`/api/admin/marketing/content/${id}/regenerate`,{method:"POST"}),
+  mktGenerate: (productId) => api._f("/api/admin/marketing/generate",{method:"POST",body:JSON.stringify({productId})}),
 };
 
 // â”€â”€ AI Functions (in-artifact Anthropic API) â”€â”€
@@ -400,6 +406,10 @@ function V9() {
   const [mktTestRunning, setMktTestRunning] = useState(false);
   const [mktTestResults, setMktTestResults] = useState(null);
   const [mktDigestSending, setMktDigestSending] = useState(false);
+  const [contentQueue, setContentQueue] = useState([]);
+  const [contentStats, setContentStats] = useState(null);
+  const [contentFilter, setContentFilter] = useState("pending_approval");
+  const [contentActionId, setContentActionId] = useState(null);
   const [showExport, setShowExport] = useState(false);
   const pendingOrders = orders.filter(o=>o.status==="pending"||o.status==="processing").length;
   const listedProds = prods.filter(p=>p.status==="listed");
@@ -641,25 +651,32 @@ function V9() {
                   <Hdr icon={<Send size={16}/>} title="Marketing" actionLabel="Open" action={()=>setView("marketing")}/>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
                     <div style={{textAlign:"center",padding:8,background:"rgba(255,255,255,.02)",borderRadius:8}}>
-                      <div style={{fontSize:16,fontWeight:700,color:"#22c55e"}}>{mktData?.email?.subscriberCount||0}</div>
-                      <div style={{fontSize:9,color:"#64748b"}}>Subscribers</div>
+                      <div style={{fontSize:16,fontWeight:700,color:"#f59e0b"}}>{mktData?.contentQueue?.pending||0}</div>
+                      <div style={{fontSize:9,color:"#64748b"}}>Awaiting Approval</div>
                     </div>
                     <div style={{textAlign:"center",padding:8,background:"rgba(255,255,255,.02)",borderRadius:8}}>
-                      <div style={{fontSize:16,fontWeight:700,color:"#8b5cf6"}}>{mktData?.social?.totalPosts||0}</div>
-                      <div style={{fontSize:9,color:"#64748b"}}>Social Posts</div>
+                      <div style={{fontSize:16,fontWeight:700,color:"#22c55e"}}>{mktData?.contentQueue?.posted||0}</div>
+                      <div style={{fontSize:9,color:"#64748b"}}>Posted</div>
                     </div>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                    {(mktData?.social?.channels||[]).slice(0,3).map((ch,i)=>(
+                    <div style={{display:"flex",alignItems:"center",gap:6,fontSize:11}}>
+                      <Image size={10} style={{color:"#8b5cf6"}}/>
+                      <span style={{color:"#94a3b8"}}>Content Gen</span>
+                      <span style={{marginLeft:"auto",color:mktData?.contentGenerator?.enabled?"#22c55e":"#64748b",fontSize:10}}>{mktData?.contentGenerator?.enabled?"Active":"Off"}</span>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:6,fontSize:11}}>
+                      <DollarSign size={10} style={{color:"#f59e0b"}}/>
+                      <span style={{color:"#94a3b8"}}>Gen Cost</span>
+                      <span style={{marginLeft:"auto",color:"#64748b",fontSize:10}}>${(mktData?.contentQueue?.totalCost||0).toFixed(2)}</span>
+                    </div>
+                    {(mktData?.social?.channels||[]).slice(0,2).map((ch,i)=>(
                       <div key={i} style={{display:"flex",alignItems:"center",gap:6,fontSize:11}}>
                         <span style={{width:5,height:5,borderRadius:"50%",background:ch.configured?"#22c55e":"#64748b"}}/>
                         <span style={{color:"#94a3b8"}}>{ch.name||ch.platform}</span>
-                        <span style={{marginLeft:"auto",color:"#64748b",fontSize:10}}>{ch.configured?`${ch.postCount||0} posts`:"off"}</span>
+                        <span style={{marginLeft:"auto",color:"#64748b",fontSize:10}}>{ch.configured?"on":"off"}</span>
                       </div>
                     ))}
-                    {(!mktData?.social?.channels||mktData.social.channels.length===0)&&(
-                      <div style={{fontSize:11,color:"#64748b",textAlign:"center",padding:8}}>Marketing data loads after redeploy</div>
-                    )}
                   </div>
                 </Panel>
               </div>
@@ -1352,30 +1369,108 @@ function V9() {
                 </div>
               </Panel>
 
-              {/* Post Product to Social */}
+              {/* Content Approval Queue */}
               <Panel>
-                <Hdr icon={<Share2 size={16}/>} title="Post Product to Social"/>
-                {rwProds.length>0?(
-                  <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:300,overflowY:"auto"}}>
-                    {rwProds.filter(p=>p.status==="active"||p.status==="approved"||p.status==="listed").slice(0,20).map(p=>(
-                      <div key={p._id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",background:"rgba(255,255,255,.02)",borderRadius:8,border:"1px solid rgba(255,255,255,.04)"}}>
-                        {p.featuredImage&&<img src={p.featuredImage} alt="" style={{width:32,height:32,borderRadius:6,objectFit:"cover"}}/>}
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontSize:12,fontWeight:600,color:"#e2e8f0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.title}</div>
-                          <div style={{fontSize:10,color:"#64748b"}}>${p.sellingPriceAud||p.sellingPrice||"?"} AUD</div>
-                        </div>
-                        <Btn size="sm" loading={mktPostingId===p._id} onClick={async()=>{
-                          setMktPostingId(p._id);
-                          const r=await api.mktPostNow(p._id);
-                          setMktPostingId(null);
-                          log(r?.success?`Posted "${p.title}" to social`:`Post failed for "${p.title}"`,r?.success?"success":"error");
-                        }}><Send size={11}/> Post</Btn>
-                      </div>
-                    ))}
+                <Hdr icon={<Image size={16}/>} title={`Content Queue${contentStats?` (${contentStats.pending} pending)`:""}`} actionLabel="Refresh" loading={mktLoading} action={async()=>{
+                  setMktLoading(true);
+                  const [q,s]=await Promise.all([api.mktContentQueue(contentFilter==="all"?null:contentFilter),api.mktContentStats()]);
+                  if(q?.content)setContentQueue(q.content);
+                  if(s)setContentStats(s);
+                  setMktLoading(false);
+                }}/>
+                {/* Filter pills */}
+                <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
+                  {[{id:"pending_approval",label:"Pending"},{id:"approved",label:"Approved"},{id:"posted",label:"Posted"},{id:"rejected",label:"Rejected"},{id:"all",label:"All"}].map(f=>(
+                    <Pill key={f.id} active={contentFilter===f.id} onClick={async()=>{
+                      setContentFilter(f.id);setMktLoading(true);
+                      const q=await api.mktContentQueue(f.id==="all"?null:f.id);
+                      if(q?.content)setContentQueue(q.content);setMktLoading(false);
+                    }} count={contentStats?.[f.id==="all"?undefined:f.id]}>{f.label}</Pill>
+                  ))}
+                </div>
+                {/* Content stats bar */}
+                {contentStats&&(
+                  <div style={{display:"flex",gap:12,marginBottom:12,fontSize:10,color:"#64748b"}}>
+                    <span>Generated: {(contentStats.pending||0)+(contentStats.approved||0)+(contentStats.posted||0)+(contentStats.rejected||0)}</span>
+                    <span>&middot; Cost: ${(contentStats.totalCost||0).toFixed(2)}</span>
+                    {contentStats.generating>0&&<span style={{color:"#f59e0b"}}>&middot; Generating: {contentStats.generating}</span>}
                   </div>
-                ):(
-                  <div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>No active products to post. Approve products first.</div>
                 )}
+                {/* Content cards */}
+                <div style={{display:"flex",flexDirection:"column",gap:10,maxHeight:500,overflowY:"auto"}}>
+                  {contentQueue.length>0?contentQueue.map(c=>(
+                    <div key={c._id} style={{background:"rgba(255,255,255,.02)",border:"1px solid rgba(255,255,255,.06)",borderRadius:10,padding:12}}>
+                      <div style={{display:"flex",gap:12}}>
+                        {/* Generated image */}
+                        <div style={{flexShrink:0}}>
+                          {c.image?.url?(
+                            <img src={c.image.url} alt="" style={{width:120,height:120,borderRadius:8,objectFit:"cover",border:"1px solid rgba(255,255,255,.08)"}}/>
+                          ):(
+                            <div style={{width:120,height:120,borderRadius:8,background:"rgba(255,255,255,.04)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#64748b"}}>
+                              {c.image?.status==="generating"?"Generating...":c.image?.status==="failed"?"Failed":"No image"}
+                            </div>
+                          )}
+                        </div>
+                        {/* Content details */}
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                            <span style={{fontSize:13,fontWeight:600,color:"#e2e8f0"}}>{c.productTitle}</span>
+                            <Badge status={c.status==="pending_approval"?"pending":c.status==="posted"?"active":c.status}/>
+                          </div>
+                          {c.caption?.instagram&&<div style={{fontSize:11,color:"#94a3b8",marginBottom:4,lineHeight:1.4}}>{c.caption.instagram}</div>}
+                          {c.caption?.hashtags?.length>0&&<div style={{fontSize:10,color:"#6366f1",marginBottom:4}}>{c.caption.hashtags.map(h=>`#${h}`).join(" ")}</div>}
+                          <div style={{display:"flex",gap:6,fontSize:9,color:"#475569",marginBottom:8}}>
+                            <span>${c.productPrice||"?"} AUD</span>
+                            <span>&middot; Cost: ${(c.generationCost||0).toFixed(2)}</span>
+                            {c.regenerationCount>0&&<span>&middot; Regen #{c.regenerationCount}</span>}
+                            <span>&middot; {new Date(c.createdAt).toLocaleString()}</span>
+                          </div>
+                          {/* Action buttons */}
+                          <div style={{display:"flex",gap:6}}>
+                            {c.status==="pending_approval"&&<>
+                              <Btn size="sm" loading={contentActionId===c._id+"a"} onClick={async()=>{
+                                setContentActionId(c._id+"a");
+                                const r=await api.mktContentApprove(c._id);
+                                setContentActionId(null);
+                                log(r?.success?`Approved & posted "${c.productTitle}"`:`Approve failed`,r?.success?"success":"error");
+                                const q=await api.mktContentQueue(contentFilter==="all"?null:contentFilter);if(q?.content)setContentQueue(q.content);
+                                const s=await api.mktContentStats();if(s)setContentStats(s);
+                              }}><CheckCircle size={11}/> Approve & Post</Btn>
+                              <Btn size="sm" variant="danger" loading={contentActionId===c._id+"r"} onClick={async()=>{
+                                setContentActionId(c._id+"r");
+                                await api.mktContentReject(c._id,"Manual reject");
+                                setContentActionId(null);
+                                const q=await api.mktContentQueue(contentFilter==="all"?null:contentFilter);if(q?.content)setContentQueue(q.content);
+                                const s=await api.mktContentStats();if(s)setContentStats(s);
+                              }}><XCircle size={11}/> Reject</Btn>
+                            </>}
+                            {(c.status==="pending_approval"||c.status==="rejected"||c.status==="failed")&&(
+                              <Btn size="sm" variant="ghost" loading={contentActionId===c._id+"g"} onClick={async()=>{
+                                setContentActionId(c._id+"g");
+                                const r=await api.mktContentRegen(c._id);
+                                setContentActionId(null);
+                                log(r?.success?`Regenerated content for "${c.productTitle}"`:`Regen failed`,r?.success?"success":"error");
+                                const q=await api.mktContentQueue(contentFilter==="all"?null:contentFilter);if(q?.content)setContentQueue(q.content);
+                              }}><RefreshCw size={11}/> Regenerate</Btn>
+                            )}
+                          </div>
+                          {/* Platform captions preview */}
+                          {c.status==="pending_approval"&&c.caption&&(
+                            <div style={{marginTop:8,display:"flex",flexDirection:"column",gap:4}}>
+                              {[{k:"facebook",l:"FB"},{k:"pinterest",l:"Pin"}].map(p=>c.caption[p.k]?(
+                                <div key={p.k} style={{fontSize:10,color:"#64748b"}}><span style={{fontWeight:600,color:"#94a3b8"}}>{p.l}:</span> {c.caption[p.k].slice(0,80)}...</div>
+                              ):null)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )):(
+                    <div style={{fontSize:12,color:"#64748b",textAlign:"center",padding:20}}>
+                      {mktLoading?"Loading...":"No content in queue. Run the pipeline or click Refresh."}
+                    </div>
+                  )}
+                </div>
               </Panel>
 
               {/* Social Post History */}
